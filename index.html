@@ -930,7 +930,31 @@
   .pk-lvl-sub.is-mapped{border-color:#6EE7B7;background:#F0FDF4}
   .pk-lvl-sub .pk-node-hdr{background:linear-gradient(90deg,#5A63C0,#7078D4)}
 
+  /* Tumpukan vertikal Subkegiatan agar pohon OPD besar tidak melebar ekstrem */
+  .pk-tree ul.pk-sub-stack{flex-direction:column;align-items:stretch;padding:18px 0 0 18px;width:258px;margin:0 auto;position:relative;justify-content:flex-start}
+  .pk-tree ul.pk-sub-stack::before{content:'';position:absolute;top:0;left:50%;width:0;height:10px;border-left:2px solid #A9B4C7;transform:translateX(-50%)}
+  .pk-tree ul.pk-sub-stack::after{content:'';position:absolute;top:10px;left:8px;width:calc(50% - 8px);height:0;border-top:2px solid #A9B4C7}
+  .pk-tree ul.pk-sub-stack > li{padding:0 0 10px 0;text-align:left;display:block;position:relative;flex-direction:initial;align-items:initial}
+  .pk-tree ul.pk-sub-stack > li:last-child{padding-bottom:0}
+  .pk-tree ul.pk-sub-stack > li:only-child{padding-top:0}
+  .pk-tree ul.pk-sub-stack > li::before{content:'';display:block !important;position:absolute;left:-10px;top:-8px;bottom:0;right:auto;width:0;height:auto;border:0;border-left:2px solid #A9B4C7;border-radius:0}
+  .pk-tree ul.pk-sub-stack > li:last-child::before{bottom:auto;height:calc(50% + 8px)}
+  .pk-tree ul.pk-sub-stack > li::after{content:'';display:block !important;position:absolute;left:-10px;top:50%;right:auto;width:10px;height:0;border:0;border-top:2px solid #A9B4C7;border-radius:0}
+  .pk-tree ul.pk-sub-stack .pk-node{width:100%}
+
+  .pk-sub-actions{margin-top:7px;padding-top:6px;border-top:1px dashed #E2E8F0;display:flex;justify-content:flex-end}
+  .pk-mini-btn{background:#fff;border:1px solid #CBD5E1;color:#334155;border-radius:7px;padding:2px 8px;font-size:10px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit;transition:all .15s}
+  .pk-mini-btn:hover{border-color:#2563EB;color:#1D4ED8;background:#EFF6FF}
+
+  .pohon-unmapped-box{margin-top:14px;background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:14px;padding:14px 16px}
+  .pohon-unmapped-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;color:#92400E;font-size:13px}
+  .pohon-unmapped-list{max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px}
+  .pohon-unmapped-row{display:grid;grid-template-columns:1fr minmax(220px,310px) auto;gap:8px;align-items:center;background:#fff;border:1px solid #FDE68A;border-radius:10px;padding:8px 10px}
+  .pohon-unmapped-row select{padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:12px;font-family:inherit;width:100%;background:#fff}
+  @media (max-width:860px){.pohon-unmapped-row{grid-template-columns:1fr}}
+
   @media print{
+    .no-export,.pk-sub-actions{display:none !important}
     .pokin-viewport{overflow:visible !important;border:none !important;background:#fff !important;padding:0 !important}
     .pokin-canvas{transform:none !important;width:100% !important}
     .pk-node{box-shadow:none !important;break-inside:avoid;transform:none !important}
@@ -1323,8 +1347,17 @@
 <div class="panel-head"><h2>Pohon Kinerja (berbasis outcome)</h2></div>
 <div class="pokin-toolbar">
 <label>Sasaran OPD:</label>
-<select id="pohonSasaran" onchange="renderPohon()" style="max-width:520px"></select>
+<select id="pohonSasaran" onchange="renderPohon()" style="max-width:380px"></select>
+<label>Filter CSF:</label>
+<select id="pohonFilterCsf" onchange="renderPohon()" style="max-width:240px"><option value="">Semua CSF</option></select>
+<label>Susunan Sub:</label>
+<select id="pohonLayout" onchange="renderPohon()">
+  <option value="auto">Ringkas (Otomatis)</option>
+  <option value="vertical">Selalu Vertikal</option>
+  <option value="horizontal">Melebar (Horizontal)</option>
+</select>
 <button class="btn btn-primary btn-sm" id="btnGenPohon" onclick="generatePohon()"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Pohon Kinerja</button>
+<button class="btn btn-line btn-sm" id="btnMapSisaPohon" onclick="petakanSisaPohon()" style="display:none"><i class="fa-solid fa-diagram-project"></i> Petakan Sisa (AI)</button>
 <span id="pohonStatus" style="font-size:12px;color:var(--muted)"></span>
 <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
 <button class="btn btn-line btn-sm" onclick="openPreviewPohon()"><i class="fa-solid fa-file-pdf"></i> Simpan PDF</button>
@@ -1338,7 +1371,7 @@
 </div>
 </div>
 </div>
-<div class="pohon-info">Disusun AI mengikuti 5 tahapan PermenPANRB 89/2021: dari outcome (Sasaran, CSF, lalu kondisi antara), bukan dari daftar program, kemudian dipetakan ke Subkegiatan yang sudah Anda input. Hasil AI perlu dibaca dan dicek sebelum dipakai sebagai dokumen resmi.</div>
+<div class="pohon-info">Disusun AI mengikuti 5 tahapan PermenPANRB 89/2021: dari outcome (Sasaran, CSF, lalu kondisi antara), kemudian dipetakan bertahap ke Subkegiatan Anda. Anda juga dapat memindahkan cabang atau memasangkan Subkegiatan secara manual bila perlu.</div>
 <div class="pokin-viewport" id="pohonViewport"><div class="pokin-canvas" id="pohonCanvas" style="transform:scale(0.9)"></div></div>
 <div id="pohonNote"></div>
 </div>
@@ -1495,6 +1528,21 @@
     <button class="btn btn-line" onclick="closeModal('modalPreviewRencana')">Tutup</button>
     <button id="modalBtnPng" class="btn btn-line" style="display:none" onclick="downloadTreePng()"><i class="fa-solid fa-image"></i> Unduh PNG (seluruh pohon)</button>
     <button id="modalBtnPrint" class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Cetak / Simpan PDF</button>
+  </div>
+</div></div>
+
+<!-- Modal pindah cabang subkegiatan di Pohon Kinerja -->
+<div id="modalPindahPohon" class="overlay"><div class="modal">
+  <h3><i class="fa-solid fa-arrows-turn-to-dots"></i> Atur Pemetaan Subkegiatan</h3>
+  <div id="modalPindahAlert"></div>
+  <div class="msg msg-info" id="pindahPohonSubLabel" style="margin-bottom:12px"></div>
+  <div class="fg">
+    <label>Kinerja Taktis Tujuan</label>
+    <select id="pindahPohonTaktisSel"></select>
+  </div>
+  <div class="modal-acts">
+    <button class="btn btn-line" onclick="closeModal('modalPindahPohon')">Batal</button>
+    <button class="btn btn-primary" id="btnSimpanPindahPohon" onclick="confirmPindahPohon()"><i class="fa-solid fa-check"></i> Simpan Pemetaan</button>
   </div>
 </div></div>
 
@@ -2493,50 +2541,69 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     function renderProgram(){
       const list = document.getElementById('programList');
       const sas = state.workspace.sasaran.filter(r => r.level === 'Sasaran');
+      const sasSet = new Set(sas.map(s => String(s.kode)));
       let html = '';
+      const renderProgItem = p => {
+        const nKeg = state.workspace.kegiatan.filter(k => String(k.kode_program_induk) === String(p.kode)).length;
+        const outcomeTag = p.outcome_program ? `<div class="meta" style="margin-top:3px"><i class="fa-solid fa-bullseye" style="color:#0F766E"></i> <span style="color:#0F766E">Outcome:</span> ${escapeHtml(p.outcome_program)}</div>` : '';
+        const rawSat = String(p.satuan == null ? '' : p.satuan).trim();
+        const satTag = (rawSat && (!p.indikator_outcome || !String(p.indikator_outcome).trim().endsWith('(' + rawSat + ')'))) ? ` <span style="color:var(--muted)">(${escapeHtml(rawSat)})</span>` : '';
+        const ikTag = p.indikator_outcome ? `<div class="meta"><i class="fa-solid fa-chart-line" style="color:#7C3AED"></i> <span style="color:#7C3AED">Indikator:</span> ${escapeHtml(p.indikator_outcome)}${satTag}</div>` : '';
+        const tGrid = hasProgTarget(p) ? renderTargetGrid(p) : '';
+        return `<div class="titem t-program"><div class="row"><div class="body"><span class="bdg b-program">${escapeHtml(p.kode)}</span><b>${escapeHtml(p.nama_program)}</b>${outcomeTag}${ikTag}${tGrid}<div class="meta"><i class="fa-solid fa-user"></i> PJ: ${escapeHtml(p.penanggung_jawab || '-')} &middot; <i class="fa-solid fa-list-check"></i> ${nKeg} Kegiatan</div></div><div class="acts"><button class="btn btn-line btn-icon btn-sm" onclick="editProgram('${p.kode}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-icon btn-sm" onclick="deleteProgram('${p.kode}')"><i class="fa-solid fa-trash-can"></i></button></div></div></div>`;
+      };
       sas.forEach(s => {
         const progs = state.workspace.program.filter(p => String(p.kode_sasaran_induk) === String(s.kode));
         if(!progs.length) return;
         html += `<div class="titem t-sasaran t-head"><span class="bdg b-sasaran">${escapeHtml(s.kode)}</span><b>${escapeHtml(s.uraian_sasaran)}</b></div>`;
-        progs.forEach(p => {
-          const nKeg = state.workspace.kegiatan.filter(k => String(k.kode_program_induk) === String(p.kode)).length;
-          const outcomeTag = p.outcome_program ? `<div class="meta" style="margin-top:3px"><i class="fa-solid fa-bullseye" style="color:#0F766E"></i> <span style="color:#0F766E">Outcome:</span> ${escapeHtml(p.outcome_program)}</div>` : '';
-          const rawSat = String(p.satuan == null ? '' : p.satuan).trim();
-          const satTag = (rawSat && (!p.indikator_outcome || !String(p.indikator_outcome).trim().endsWith('(' + rawSat + ')'))) ? ` <span style="color:var(--muted)">(${escapeHtml(rawSat)})</span>` : '';
-          const ikTag = p.indikator_outcome ? `<div class="meta"><i class="fa-solid fa-chart-line" style="color:#7C3AED"></i> <span style="color:#7C3AED">Indikator:</span> ${escapeHtml(p.indikator_outcome)}${satTag}</div>` : '';
-          const tGrid = hasProgTarget(p) ? renderTargetGrid(p) : '';
-          html += `<div class="titem t-program"><div class="row"><div class="body"><span class="bdg b-program">${escapeHtml(p.kode)}</span><b>${escapeHtml(p.nama_program)}</b>${outcomeTag}${ikTag}${tGrid}<div class="meta"><i class="fa-solid fa-user"></i> PJ: ${escapeHtml(p.penanggung_jawab || '-')} &middot; <i class="fa-solid fa-list-check"></i> ${nKeg} Kegiatan</div></div><div class="acts"><button class="btn btn-line btn-icon btn-sm" onclick="editProgram('${p.kode}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-icon btn-sm" onclick="deleteProgram('${p.kode}')"><i class="fa-solid fa-trash-can"></i></button></div></div></div>`;
-        });
+        progs.forEach(p => { html += renderProgItem(p); });
       });
+      const orphans = state.workspace.program.filter(p => !sasSet.has(String(p.kode_sasaran_induk)));
+      if(orphans.length){
+        html += `<div class="titem t-sasaran t-head" style="border-left-color:var(--danger)"><span class="bdg" style="background:var(--danger)">Perhatian</span><b>Program belum terhubung ke Sasaran Renstra aktif (Sasaran induk pernah direset/dihapus)</b></div>`;
+        orphans.forEach(p => { html += renderProgItem(p); });
+      }
       list.innerHTML = html || '<div class="empty"><div class="ic"><i class="fa-solid fa-layer-group"></i></div><p>Belum ada Program.</p></div>';
     }
     function renderKegiatan(){
       const list = document.getElementById('kegiatanList');
+      const progSet = new Set(state.workspace.program.map(p => String(p.kode)));
       let html = '';
+      const renderKegItem = k => {
+        const nSk = state.workspace.subkegiatan.filter(s => String(s.kode_kegiatan_induk) === String(k.kode)).length;
+        const skTag = k.sasaran_kegiatan ? `<div class="meta" style="margin-top:3px"><i class="fa-solid fa-flag" style="color:#B45309"></i> <span style="color:#B45309">Sasaran:</span> ${escapeHtml(k.sasaran_kegiatan)}</div>` : '';
+        return `<div class="titem t-kegiatan"><div class="row"><div class="body"><span class="bdg b-kegiatan">${escapeHtml(k.kode)}</span><b>${escapeHtml(k.nama_kegiatan)}</b>${skTag}<div class="meta"><i class="fa-solid fa-diagram-project"></i> ${nSk} Subkegiatan</div></div><div class="acts"><button class="btn btn-line btn-icon btn-sm" onclick="editKegiatan('${k.kode}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-icon btn-sm" onclick="deleteKegiatan('${k.kode}')"><i class="fa-solid fa-trash-can"></i></button></div></div></div>`;
+      };
       state.workspace.program.forEach(p => {
         const kegs = state.workspace.kegiatan.filter(k => String(k.kode_program_induk) === String(p.kode));
         if(!kegs.length) return;
         html += `<div class="titem t-program t-head"><span class="bdg b-program">${escapeHtml(p.kode)}</span><b>${escapeHtml(p.nama_program)}</b></div>`;
-        kegs.forEach(k => {
-          const nSk = state.workspace.subkegiatan.filter(s => String(s.kode_kegiatan_induk) === String(k.kode)).length;
-          const skTag = k.sasaran_kegiatan ? `<div class="meta" style="margin-top:3px"><i class="fa-solid fa-flag" style="color:#B45309"></i> <span style="color:#B45309">Sasaran:</span> ${escapeHtml(k.sasaran_kegiatan)}</div>` : '';
-          html += `<div class="titem t-kegiatan"><div class="row"><div class="body"><span class="bdg b-kegiatan">${escapeHtml(k.kode)}</span><b>${escapeHtml(k.nama_kegiatan)}</b>${skTag}<div class="meta"><i class="fa-solid fa-diagram-project"></i> ${nSk} Subkegiatan</div></div><div class="acts"><button class="btn btn-line btn-icon btn-sm" onclick="editKegiatan('${k.kode}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-icon btn-sm" onclick="deleteKegiatan('${k.kode}')"><i class="fa-solid fa-trash-can"></i></button></div></div></div>`;
-        });
+        kegs.forEach(k => { html += renderKegItem(k); });
       });
+      const orphans = state.workspace.kegiatan.filter(k => !progSet.has(String(k.kode_program_induk)));
+      if(orphans.length){
+        html += `<div class="titem t-program t-head" style="border-left-color:var(--danger)"><span class="bdg" style="background:var(--danger)">Perhatian</span><b>Kegiatan belum terhubung ke Program aktif (Program induk pernah direset/dihapus)</b></div>`;
+        orphans.forEach(k => { html += renderKegItem(k); });
+      }
       list.innerHTML = html || '<div class="empty"><div class="ic"><i class="fa-solid fa-list-check"></i></div><p>Belum ada Kegiatan.</p></div>';
     }
     function renderSubkegiatan(){
       const list = document.getElementById('subkegiatanList');
+      const kegSet = new Set(state.workspace.kegiatan.map(k => String(k.kode)));
       let html = '';
+      const renderSubItem = s => `<div class="titem t-sub"><div class="row"><div class="body"><span class="bdg b-sub">${escapeHtml(s.kode)}</span><b>${escapeHtml(s.nama_subkegiatan)}</b><div class="meta"><i class="fa-solid fa-chart-simple"></i> ${escapeHtml(s.indikator_output || '-')} (${escapeHtml(s.satuan_output || '-')})<br><i class="fa-solid fa-user"></i> PJ: ${escapeHtml(s.penanggung_jawab || '-')}</div></div><div class="acts"><button class="btn btn-line btn-icon btn-sm" onclick="editSubkegiatan('${s.kode}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-icon btn-sm" onclick="deleteSubkegiatan('${s.kode}')"><i class="fa-solid fa-trash-can"></i></button></div></div></div>`;
       state.workspace.kegiatan.forEach(k => {
         const sks = state.workspace.subkegiatan.filter(s => String(s.kode_kegiatan_induk) === String(k.kode));
         if(!sks.length) return;
         const prog = state.workspace.program.find(p => String(p.kode) === String(k.kode_program_induk));
         html += `<div class="titem t-kegiatan t-head"><span class="bdg b-kegiatan">${escapeHtml(k.kode)}</span><b>${escapeHtml(k.nama_kegiatan)}</b><div class="meta">Program: ${escapeHtml(prog ? prog.nama_program : '-')}</div></div>`;
-        sks.forEach(s => {
-          html += `<div class="titem t-sub"><div class="row"><div class="body"><span class="bdg b-sub">${escapeHtml(s.kode)}</span><b>${escapeHtml(s.nama_subkegiatan)}</b><div class="meta"><i class="fa-solid fa-chart-simple"></i> ${escapeHtml(s.indikator_output || '-')} (${escapeHtml(s.satuan_output || '-')})<br><i class="fa-solid fa-user"></i> PJ: ${escapeHtml(s.penanggung_jawab || '-')}</div></div><div class="acts"><button class="btn btn-line btn-icon btn-sm" onclick="editSubkegiatan('${s.kode}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-icon btn-sm" onclick="deleteSubkegiatan('${s.kode}')"><i class="fa-solid fa-trash-can"></i></button></div></div></div>`;
-        });
+        sks.forEach(s => { html += renderSubItem(s); });
       });
+      const orphans = state.workspace.subkegiatan.filter(s => !kegSet.has(String(s.kode_kegiatan_induk)));
+      if(orphans.length){
+        html += `<div class="titem t-kegiatan t-head" style="border-left-color:var(--danger)"><span class="bdg" style="background:var(--danger)">Perhatian (${orphans.length} data lama)</span><b>Subkegiatan dari Kegiatan yang pernah direset/dihapus (Induk: ${escapeHtml(orphans.map(o=>o.kode_kegiatan_induk).join(', '))}) — Klik Edit untuk memindahkan ke Kegiatan baru atau Reset Subkegiatan</b></div>`;
+        orphans.forEach(s => { html += renderSubItem(s); });
+      }
       list.innerHTML = html || '<div class="empty"><div class="ic"><i class="fa-solid fa-diagram-project"></i></div><p>Belum ada Subkegiatan.</p></div>';
     }
     function openSasaranForm(){
@@ -2679,10 +2746,20 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         t2029: document.getElementById('programT2029').value, t2030: document.getElementById('programT2030').value,
         penanggung_jawab: pj
       };
+      const hadProgBefore = (state.workspace.program || []).some(x => String(x.kode_sasaran_induk)===String(kodeSasaranInduk) && norm(x.nama_program)===norm(nama));
       if(m.dataset.mode==='edit'){ params.action='updateProgram'; params.kode_program=m.dataset.kode; } else params.action='saveProgram';
       await withBtnLock('btnSaveProgram', async () => {
         try{
-          const r=await callApi(params); if(!r.success) throw new Error(r.message);
+          const r=await callApi(params);
+          if(!r.success){
+            if(m.dataset.mode!=='edit' && !hadProgBefore && /sudah ada/i.test(r.message||'')){
+              await reloadWorkspaceSafely('program');
+              if((state.workspace.program || []).some(x => String(x.kode_sasaran_induk)===String(kodeSasaranInduk) && norm(x.nama_program)===norm(nama))){
+                closeModal('modalProgram'); return;
+              }
+            }
+            throw new Error(r.message);
+          }
           closeModal('modalProgram'); await reloadWorkspaceSafely('program');
         }
         catch(e){ showAlert('modalProgramAlert','err',e.message); }
@@ -2710,10 +2787,23 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       const sasaranKegiatan=document.getElementById('kegiatanSasaran').value.trim();
       if(!kodeProgramInduk) return showAlert('modalKegiatanAlert','err','Program induk wajib dipilih.');
       if(!nama) return showAlert('modalKegiatanAlert','err','Nama Kegiatan wajib diisi.');
+      const hadKegBefore = (state.workspace.kegiatan || []).some(x => String(x.kode_program_induk)===String(kodeProgramInduk) && norm(x.nama_kegiatan)===norm(nama));
       const params={ id_opd: state.currentOpd.id_opd, token: state.currentOpd.token, kode_program_induk: kodeProgramInduk, nama_kegiatan: nama, sasaran_kegiatan: sasaranKegiatan };
       if(m.dataset.mode==='edit'){ params.action='updateKegiatan'; params.kode_kegiatan=m.dataset.kode; } else params.action='saveKegiatan';
       await withBtnLock('btnSaveKegiatan', async () => {
-        try{ const r=await callApi(params); if(!r.success) throw new Error(r.message); closeModal('modalKegiatan'); await reloadWorkspaceSafely('kegiatan'); }
+        try{
+          const r=await callApi(params);
+          if(!r.success){
+            if(m.dataset.mode!=='edit' && !hadKegBefore && /sudah ada/i.test(r.message||'')){
+              await reloadWorkspaceSafely('kegiatan');
+              if((state.workspace.kegiatan || []).some(x => String(x.kode_program_induk)===String(kodeProgramInduk) && norm(x.nama_kegiatan)===norm(nama))){
+                closeModal('modalKegiatan'); return;
+              }
+            }
+            throw new Error(r.message);
+          }
+          closeModal('modalKegiatan'); await reloadWorkspaceSafely('kegiatan');
+        }
         catch(e){ showAlert('modalKegiatanAlert','err',e.message); }
       });
     }
@@ -2739,7 +2829,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       const m=document.getElementById('modalSubkegiatan');
       const kodeKegiatanInduk=document.getElementById('subkegiatanKegiatanInduk').value;
       const nama=document.getElementById('subkegiatanNama').value.trim();
-      const indikator=document.getElementById('subkegiatanIndikator').value.trim();
+      let indikator=document.getElementById('subkegiatanIndikator').value.trim();
       const satuan=document.getElementById('subkegiatanSatuan').value.trim();
       const pj=document.getElementById('subkegiatanPj').value.trim();
       if(!kodeKegiatanInduk) return showAlert('modalSubkegiatanAlert','err','Kegiatan induk wajib dipilih.');
@@ -2747,10 +2837,26 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       if(!indikator) return showAlert('modalSubkegiatanAlert','err','Indikator output wajib diisi.');
       if(!satuan) return showAlert('modalSubkegiatanAlert','err','Satuan output wajib diisi.');
       if(!pj) return showAlert('modalSubkegiatanAlert','err','Penanggung Jawab wajib diisi.');
+      if(satuan && indikator.toLowerCase().endsWith('(' + satuan.toLowerCase() + ')')){
+        indikator = indikator.slice(0, indikator.length - (satuan.length + 2)).trim();
+      }
+      const hadSubBefore = (state.workspace.subkegiatan || []).some(x => String(x.kode_kegiatan_induk)===String(kodeKegiatanInduk) && norm(x.nama_subkegiatan)===norm(nama));
       const params={ id_opd: state.currentOpd.id_opd, token: state.currentOpd.token, kode_kegiatan_induk: kodeKegiatanInduk, nama_subkegiatan: nama, indikator_output: indikator, satuan_output: satuan, penanggung_jawab: pj };
       if(m.dataset.mode==='edit'){ params.action='updateSubkegiatan'; params.kode_subkegiatan=m.dataset.kode; } else params.action='saveSubkegiatan';
       await withBtnLock('btnSaveSubkegiatan', async () => {
-        try{ const r=await callApi(params); if(!r.success) throw new Error(r.message); closeModal('modalSubkegiatan'); await reloadWorkspaceSafely('subkegiatan'); }
+        try{
+          const r=await callApi(params);
+          if(!r.success){
+            if(m.dataset.mode!=='edit' && !hadSubBefore && /sudah ada/i.test(r.message||'')){
+              await reloadWorkspaceSafely('subkegiatan');
+              if((state.workspace.subkegiatan || []).some(x => String(x.kode_kegiatan_induk)===String(kodeKegiatanInduk) && norm(x.nama_subkegiatan)===norm(nama))){
+                closeModal('modalSubkegiatan'); return;
+              }
+            }
+            throw new Error(r.message);
+          }
+          closeModal('modalSubkegiatan'); await reloadWorkspaceSafely('subkegiatan');
+        }
         catch(e){ showAlert('modalSubkegiatanAlert','err',e.message); }
       });
     }
@@ -3048,27 +3154,55 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       if(!m) return '';
       return level === 'CSF' ? 'CSF ' + m[1] : m[1] + '.' + (m[2] || '');
     }
-    function buildPohonTreeHtml(sas, inds, rows, w){
+    function getSasaranSubsList(kodeSasaran, w){
+      w = w || state.workspace;
+      const progs = {}; (w.program || []).filter(p => String(p.kode_sasaran_induk) === String(kodeSasaran)).forEach(p => progs[String(p.kode)] = true);
+      const kegs = {}; (w.kegiatan || []).filter(k => progs[String(k.kode_program_induk)]).forEach(k => kegs[String(k.kode)] = k);
+      return (w.subkegiatan || []).filter(s => kegs[String(s.kode_kegiatan_induk)]).map(s => Object.assign({}, s, { _kegiatan: kegs[String(s.kode_kegiatan_induk)] }));
+    }
+    function getPohonTaktisList(kodeSasaran, w){
+      w = w || state.workspace;
+      const rows = (w.pohonKinerja || []).filter(r => String(r.kode_sasaran_induk) === String(kodeSasaran));
+      const csfBy = {}; rows.filter(r => r.level === 'CSF').forEach(c => { csfBy[String(c.kode)] = c; });
+      return rows.filter(r => r.level === 'Taktis').map(t => ({
+        kode: String(t.kode),
+        label: pohonLabel(t.kode, 'Taktis'),
+        pernyataan: t.pernyataan || '',
+        csfLabel: csfBy[String(t.kode_induk)] ? pohonLabel(csfBy[String(t.kode_induk)].kode, 'CSF') : ''
+      }));
+    }
+    function buildPohonTreeHtml(sas, inds, rows, w, opts){
+      opts = opts || {};
       const E = escapeHtml;
-      const csfs = rows.filter(r => r.level === 'CSF');
-      if(!csfs.length) return { html:'', unmapped:[], hasRefs:false };
+      const allCsfs = rows.filter(r => r.level === 'CSF');
+      if(!allCsfs.length) return { html:'', unmapped:[], unmappedItems:[], hasRefs:false, totalSubs:0 };
+      const filterCsf = opts.filterCsf || '';
+      const csfs = filterCsf ? allCsfs.filter(c => String(c.kode) === String(filterCsf)) : allCsfs;
+      const layoutMode = opts.layoutMode || 'auto';
+      const forPrint = !!opts.forPrint;
       const subBy = {}; w.subkegiatan.forEach(s => subBy[String(s.kode)] = s);
       const kegBy = {}; w.kegiatan.forEach(k => kegBy[String(k.kode)] = k);
       const mapped = {};
+      // Hitung seluruh subkegiatan yang sudah terpetakan pada sasaran ini (tidak terpengaruh filter CSF)
+      rows.filter(r => r.level === 'Taktis').forEach(t => {
+        String(t.ref_subkegiatan || '').split(',').map(x => x.trim()).filter(x => subBy[x]).forEach(k => { mapped[k] = String(t.kode); });
+      });
       const ind = t => t ? `<div class="pk-node-inds"><span class="pk-ind-item"><i class="fa-solid fa-chart-line"></i> ${E(t)}</span></div>` : '';
       const jm = t => t ? `<div class="pk-narasi">${E(t)}</div>` : '';
       const node = (cls, hdr, code, title, extra) => `<div class="pk-node ${cls}"><div class="pk-node-hdr"><span>${hdr}</span><span>${E(code)}</span></div><div class="pk-node-body"><div class="pk-node-title">${E(title)}</div>${extra||''}</div></div>`;
-      const subNode = s => {
+      const subNode = (s, tKode) => {
         const keg = kegBy[String(s.kode_kegiatan_induk)];
+        const actBtn = forPrint ? '' : `<div class="pk-sub-actions no-export"><button type="button" class="pk-mini-btn" onclick="openPindahPohon('${E(s.kode)}','${E(tKode)}')"><i class="fa-solid fa-arrows-turn-to-dots"></i> Pindah / Lepas</button></div>`;
         return '<li>' + node('pk-lvl-sub','Output · Subkegiatan', s.kode, s.nama_subkegiatan,
           (keg ? `<div class="pk-node-inds" style="color:#B45309">Kegiatan: ${E(keg.nama_kegiatan)}</div>` : '')
-          + `<div class="pk-node-inds"><b>Output:</b> ${E(s.indikator_output||'-')} (${E(s.satuan_output||'-')})</div>`) + '</li>';
+          + `<div class="pk-node-inds"><b>Output:</b> ${E(s.indikator_output||'-')} (${E(s.satuan_output||'-')})</div>` + actBtn) + '</li>';
       };
       const taktisNode = t => {
         const refs = String(t.ref_subkegiatan || '').split(',').map(x => x.trim()).filter(x => subBy[x]);
-        refs.forEach(k => mapped[k] = true);
+        const useStack = refs.length > 0 && (layoutMode === 'vertical' || (layoutMode === 'auto' && refs.length >= 2));
+        const ulTag = useStack ? '<ul class="pk-sub-stack">' : '<ul>';
         return '<li>' + node('pk-lvl-taktis','Kinerja Taktis', pohonLabel(t.kode,'Taktis'), t.pernyataan, ind(t.indikator) + jm(t.jika_maka))
-          + (refs.length ? '<ul>' + refs.map(k => subNode(subBy[k])).join('') + '</ul>' : '') + '</li>';
+          + (refs.length ? ulTag + refs.map(k => subNode(subBy[k], t.kode)).join('') + '</ul>' : '') + '</li>';
       };
       const csfNode = c => {
         const ts = rows.filter(r => r.level === 'Taktis' && String(r.kode_induk) === String(c.kode));
@@ -3076,12 +3210,10 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
           + (ts.length ? '<ul>' + ts.map(taktisNode).join('') + '</ul>' : '') + '</li>';
       };
       const indHtml = inds.length ? '<div class="pk-node-inds">' + inds.map(i => `<div class="pk-ind-item"><i class="fa-solid fa-chart-line"></i> ${E(i.indikator)} (${E(i.satuan||'-')})</div>`).join('') + '</div>' : '';
-      const html = '<div class="pk-tree"><ul class="pk-root"><li>' + node('pk-lvl-sasopd','Sasaran OPD', sas.kode, sas.uraian_sasaran, indHtml) + '<ul>' + csfs.map(csfNode).join('') + '</ul></li></ul></div>';
-      // subkegiatan di bawah sasaran ini yang belum terpetakan
-      const progs = {}; w.program.filter(p => String(p.kode_sasaran_induk) === String(sas.kode)).forEach(p => progs[String(p.kode)] = true);
-      const kegs = {}; w.kegiatan.filter(k => progs[String(k.kode_program_induk)]).forEach(k => kegs[String(k.kode)] = true);
-      const unmapped = w.subkegiatan.filter(s => kegs[String(s.kode_kegiatan_induk)] && !mapped[String(s.kode)]).map(s => s.nama_subkegiatan);
-      return { html, unmapped, hasRefs: Object.keys(mapped).length > 0 };
+      const html = '<div class="pk-tree"><ul class="pk-root"><li>' + node('pk-lvl-sasopd','Sasaran OPD', sas.kode, sas.uraian_sasaran, indHtml) + (csfs.length ? '<ul>' + csfs.map(csfNode).join('') + '</ul>' : '') + '</li></ul></div>';
+      const sasSubs = getSasaranSubsList(sas.kode, w);
+      const unmappedItems = sasSubs.filter(s => !mapped[String(s.kode)]);
+      return { html, unmapped: unmappedItems.map(s => s.nama_subkegiatan), unmappedItems, hasRefs: Object.keys(mapped).length > 0, totalSubs: sasSubs.length };
     }
     function renderPohon(){
       const sel = document.getElementById('pohonSasaran'); if(!sel) return;
@@ -3091,13 +3223,32 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       sel.innerHTML = sasList.length ? sasList.map(s => `<option value="${E(s.kode)}">${E(s.kode)} — ${E(String(s.uraian_sasaran).slice(0,90))}</option>`).join('') : '<option value="">(Belum ada Sasaran Renstra)</option>';
       if(cur && sasList.some(s => String(s.kode) === cur)) sel.value = cur;
       const cv = document.getElementById('pohonCanvas'), note = document.getElementById('pohonNote');
+      const csfSel = document.getElementById('pohonFilterCsf'), btnSisa = document.getElementById('btnMapSisaPohon');
       const sas = sasList.find(s => String(s.kode) === sel.value);
       note.innerHTML = '';
-      if(!sas){ cv.innerHTML = '<div class="empty"><div class="ic"><i class="fa-solid fa-tree"></i></div><p>Belum ada Sasaran Renstra. Tambahkan Sasaran Renstra terlebih dahulu.</p></div>'; return; }
+      if(!sas){
+        if(csfSel) csfSel.innerHTML = '<option value="">Semua CSF</option>';
+        if(btnSisa) btnSisa.style.display = 'none';
+        cv.innerHTML = '<div class="empty"><div class="ic"><i class="fa-solid fa-tree"></i></div><p>Belum ada Sasaran Renstra. Tambahkan Sasaran Renstra terlebih dahulu.</p></div>';
+        return;
+      }
       const rows = (w.pohonKinerja || []).filter(r => String(r.kode_sasaran_induk) === String(sas.kode));
+      const csfs = rows.filter(r => r.level === 'CSF');
+      if(csfSel){
+        const curCsf = csfSel.value;
+        csfSel.innerHTML = '<option value="">Semua CSF (' + csfs.length + ')</option>' + csfs.map(c => `<option value="${E(c.kode)}">${E(pohonLabel(c.kode,'CSF'))} — ${E(String(c.pernyataan||'').slice(0,65))}</option>`).join('');
+        if(curCsf && csfs.some(c => String(c.kode) === curCsf)) csfSel.value = curCsf;
+      }
+      const filterCsf = csfSel ? csfSel.value : '';
+      const layoutMode = document.getElementById('pohonLayout') ? document.getElementById('pohonLayout').value : 'auto';
       const inds = w.sasaran.filter(r => r.level === 'Indikator' && String(r.kode_sasaran_induk) === String(sas.kode));
-      const b = buildPohonTreeHtml(sas, inds, rows, w);
-      if(!b.html){ cv.innerHTML = '<div class="empty"><div class="ic"><i class="fa-solid fa-tree"></i></div><p>Pohon kinerja untuk sasaran ini belum dibuat.<br>Klik <b>Generate Pohon Kinerja</b>.</p></div>'; return; }
+      const b = buildPohonTreeHtml(sas, inds, rows, w, { filterCsf, layoutMode, forPrint: false });
+      if(!b.html){
+        if(btnSisa) btnSisa.style.display = 'none';
+        cv.innerHTML = '<div class="empty"><div class="ic"><i class="fa-solid fa-tree"></i></div><p>Pohon kinerja untuk sasaran ini belum dibuat.<br>Klik <b>Generate Pohon Kinerja</b>.</p></div>';
+        return;
+      }
+      if(btnSisa) btnSisa.style.display = b.unmappedItems.length ? '' : 'none';
       const ctx = pohonKonteksRpjmd(sas ? sas.kode_sasaran_induk : '');
       const badgeHtml = `<div class="pk-rpjmd-badge" style="margin-bottom:20px;display:inline-flex;align-items:center;gap:10px;padding:8px 18px;background:linear-gradient(135deg,#EFF6FF,#E0EFFF);border:1.5px solid #BFDBFE;border-radius:999px;font-size:12.5px;color:#1E3A8A;box-shadow:0 2px 8px rgba(30,58,138,0.06);text-align:left">
         <i class="fa-solid fa-link" style="color:#2563EB;font-size:13px"></i>
@@ -3105,13 +3256,68 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       </div>`;
       cv.innerHTML = badgeHtml + '<br>' + b.html;
       const tgl = rows.length ? rows[0].tanggal : '';
-      let msg = tgl ? `<div class="pohon-info">Disusun AI pada ${E(tgl)}.</div>` : '';
-      if(!b.hasRefs) msg += '<div class="pohon-note">Pemetaan ke Subkegiatan belum ada atau tidak ditemukan. Jalankan Generate lagi bila Subkegiatan sudah diinput.</div>';
-      else if(b.unmapped.length) msg += `<div class="pohon-note"><b>${b.unmapped.length} Subkegiatan belum terpetakan</b> ke kondisi antara manapun: ${b.unmapped.map(E).join('; ')}.</div>`;
+      const mappedCount = Math.max(0, b.totalSubs - b.unmappedItems.length);
+      let msg = tgl ? `<div class="pohon-info">Disusun AI pada ${E(tgl)} · Terpetakan <b>${mappedCount}/${b.totalSubs}</b> Subkegiatan.</div>` : '';
+      if(b.unmappedItems.length){
+        const taktisList = getPohonTaktisList(sas.kode, w);
+        const taktisOpts = '<option value="">— Pilih Kinerja Taktis —</option>' + taktisList.map(t => `<option value="${E(t.kode)}">[${E(t.label)}] ${E(t.pernyataan.slice(0,85))}</option>`).join('');
+        msg += `<div class="pohon-unmapped-box">
+          <div class="pohon-unmapped-head">
+            <span><i class="fa-solid fa-triangle-exclamation"></i> <b>${b.unmappedItems.length} Subkegiatan belum terpetakan</b> ke kondisi antara manapun (dapat dipetakan otomatis dengan AI atau dipasangkan manual di bawah):</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="btn btn-sm btn-line" onclick="petakanSisaPohon()"><i class="fa-solid fa-wand-magic-sparkles"></i> Petakan Sisa (AI)</button>
+              <button type="button" class="btn btn-sm btn-primary" onclick="simpanManualSemuaUnmapped()"><i class="fa-solid fa-check-double"></i> Pasangkan yang Dipilih</button>
+            </div>
+          </div>
+          <div class="pohon-unmapped-list">${b.unmappedItems.map(u => `<div class="pohon-unmapped-row">
+            <div style="font-size:12px;line-height:1.4">
+              <div><span style="font-weight:700;color:#4338CA">[${E(u.kode)}]</span> <b>${E(u.nama_subkegiatan)}</b></div>
+              ${u._kegiatan ? `<div style="font-size:11px;color:#9A3412">Kegiatan: ${E(u._kegiatan.nama_kegiatan)}</div>` : ''}
+            </div>
+            <select data-unmapped-sub="${E(u.kode)}">${taktisOpts}</select>
+            <button type="button" class="btn btn-sm btn-line" onclick="simpanManualSatuSub('${E(u.kode)}')">Pasangkan</button>
+          </div>`).join('')}</div>
+        </div>`;
+      }
       note.innerHTML = msg;
     }
     function mergePohon(kode, rows){
       state.workspace.pohonKinerja = (state.workspace.pohonKinerja || []).filter(r => String(r.kode_sasaran_induk) !== String(kode)).concat(rows || []);
+    }
+    function getUnmappedSubCodes(kode){
+      const w = state.workspace;
+      const rows = (w.pohonKinerja || []).filter(r => String(r.kode_sasaran_induk) === String(kode));
+      const mapped = {};
+      rows.filter(r => r.level === 'Taktis').forEach(t => {
+        String(t.ref_subkegiatan || '').split(',').map(x => x.trim()).filter(Boolean).forEach(sk => { mapped[sk] = true; });
+      });
+      return getSasaranSubsList(kode, w).filter(s => !mapped[String(s.kode)]).map(s => String(s.kode));
+    }
+    async function runPemetaanBatches(kode, subCodes, opts){
+      opts = opts || {};
+      const st = opts.statusEl, BATCH_SIZE = 20;
+      const total = subCodes.length;
+      if(!total) return { mappedDone: true, message: 'Tidak ada Subkegiatan untuk dipetakan.' };
+      const base = { id_opd: state.currentOpd.id_opd, token: state.currentOpd.token, kode_sasaran: kode };
+      let lastMsg = '';
+      for(let i = 0; i < total; i += BATCH_SIZE){
+        const chunk = subCodes.slice(i, i + BATCH_SIZE);
+        const start = i + 1, end = Math.min(i + BATCH_SIZE, total);
+        if(st) st.textContent = `${opts.prefix || 'Memetakan'} ${start}–${end} dari ${total} Subkegiatan...`;
+        const r = await callApi(Object.assign({
+          action: 'petakanPohonKinerja',
+          mode: (opts.resetAll && i === 0) ? 'all' : 'sisa',
+          batch_codes: JSON.stringify(chunk),
+          pass2: opts.pass2 ? '1' : ''
+        }, base));
+        if(!r.success){
+          if(r.session_expired){ doLogout(true); return { aborted: true }; }
+          throw new Error(r.message);
+        }
+        mergePohon(kode, r.rows); renderPohon();
+        lastMsg = r.message || '';
+      }
+      return { mappedDone: true, message: lastMsg };
     }
     async function generatePohon(){
       const kode = document.getElementById('pohonSasaran').value;
@@ -3128,16 +3334,109 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         const r1 = await callApi(Object.assign({ action:'generatePohonKinerja', rpjmd_tujuan: ctx.tujuan, rpjmd_sasaran: ctx.sasaran }, base));
         if(!r1.success){ if(r1.session_expired){ doLogout(true); return; } throw new Error(r1.message); }
         mergePohon(kode, r1.rows); renderPohon();
-        st.textContent = 'Langkah 2/2: memetakan ke Subkegiatan...';
-        const r2 = await callApi(Object.assign({ action:'petakanPohonKinerja' }, base));
-        if(!r2.success){ st.textContent = 'Pohon tersusun, tetapi pemetaan gagal: ' + r2.message; return; }
-        mergePohon(kode, r2.rows); renderPohon();
-        st.textContent = r2.message || 'Selesai.';
+
+        const subCodes = getSasaranSubsList(kode, state.workspace).map(s => String(s.kode));
+        if(!subCodes.length){ st.textContent = 'Pohon tersusun (belum ada Subkegiatan di sasaran ini).'; return; }
+
+        const res1 = await runPemetaanBatches(kode, subCodes, { resetAll: true, pass2: false, prefix: 'Langkah 2/2: memetakan', statusEl: st });
+        if(res1.aborted) return;
+
+        // Pass-2 otomatis bila masih ada Subkegiatan yang terlewat
+        const sisa = getUnmappedSubCodes(kode);
+        let finalMsg = res1.message;
+        if(sisa.length > 0 && sisa.length <= 40){
+          const res2 = await runPemetaanBatches(kode, sisa, { resetAll: false, pass2: true, prefix: 'Penyisiran akhir', statusEl: st });
+          if(res2.aborted) return;
+          if(res2.message) finalMsg = res2.message;
+        }
+        st.textContent = finalMsg || 'Selesai.';
       }catch(err){
-        st.textContent = 'Gagal: ' + err.message;
+        st.textContent = 'Pohon / pemetaan sebagian tersimpan, terhenti karena: ' + err.message;
       }finally{
         btn.disabled = false; btn.innerHTML = orig;
       }
+    }
+    async function petakanSisaPohon(){
+      const kode = document.getElementById('pohonSasaran').value;
+      if(!kode) return alert('Pilih Sasaran OPD terlebih dahulu.');
+      const sisa = getUnmappedSubCodes(kode);
+      if(!sisa.length) return alert('Semua Subkegiatan pada sasaran ini sudah terpetakan.');
+      const btn = document.getElementById('btnMapSisaPohon'), st = document.getElementById('pohonStatus');
+      const orig = btn ? btn.innerHTML : '';
+      if(btn){ btn.disabled = true; btn.innerHTML = '<span class="loading"></span> Memetakan sisa...'; }
+      try{
+        const res = await runPemetaanBatches(kode, sisa, { resetAll: false, pass2: true, prefix: 'Memetakan sisa', statusEl: st });
+        if(res.aborted) return;
+        st.textContent = res.message || 'Selesai memetakan sisa.';
+      }catch(err){
+        st.textContent = 'Gagal memetakan sisa: ' + err.message;
+      }finally{
+        if(btn){ btn.disabled = false; btn.innerHTML = orig; }
+      }
+    }
+    async function saveManualPemetaan(kode, updates){
+      const st = document.getElementById('pohonStatus');
+      if(st) st.textContent = 'Menyimpan pemetaan manual...';
+      const r = await callApi({
+        action: 'updatePemetaanPohon',
+        id_opd: state.currentOpd.id_opd,
+        token: state.currentOpd.token,
+        kode_sasaran: kode,
+        updates: JSON.stringify(updates)
+      });
+      if(!r.success){
+        if(r.session_expired){ doLogout(true); return false; }
+        throw new Error(r.message);
+      }
+      mergePohon(kode, r.rows); renderPohon();
+      if(st) st.textContent = r.message || 'Pemetaan diperbarui.';
+      return true;
+    }
+    let _pindahPohonCtx = null;
+    function openPindahPohon(subKode, currentTaktisKode){
+      const kode = document.getElementById('pohonSasaran').value;
+      const sub = (state.workspace.subkegiatan || []).find(s => String(s.kode) === String(subKode));
+      if(!kode || !sub) return;
+      _pindahPohonCtx = { kodeSasaran: kode, kodeSub: String(subKode) };
+      document.getElementById('modalPindahAlert').innerHTML = '';
+      document.getElementById('pindahPohonSubLabel').innerHTML = `<b>[${escapeHtml(sub.kode)}]</b> ${escapeHtml(sub.nama_subkegiatan)}`;
+      const taktisList = getPohonTaktisList(kode, state.workspace);
+      const sel = document.getElementById('pindahPohonTaktisSel');
+      sel.innerHTML = '<option value="">— Lepaskan dari cabang (jadikan belum terpetakan) —</option>' + taktisList.map(t => `<option value="${escapeHtml(t.kode)}">[${escapeHtml(t.label)}] ${escapeHtml(t.pernyataan)}</option>`).join('');
+      sel.value = currentTaktisKode || '';
+      openModal('modalPindahPohon');
+    }
+    async function confirmPindahPohon(){
+      if(!_pindahPohonCtx) return;
+      const btn = document.getElementById('btnSimpanPindahPohon');
+      const tk = document.getElementById('pindahPohonTaktisSel').value;
+      btn.disabled = true;
+      try{
+        const ok = await saveManualPemetaan(_pindahPohonCtx.kodeSasaran, [{ kode_subkegiatan: _pindahPohonCtx.kodeSub, kode_taktis: tk }]);
+        if(ok) closeModal('modalPindahPohon');
+      }catch(e){
+        showAlert('modalPindahAlert', 'err', e.message);
+      }finally{
+        btn.disabled = false;
+      }
+    }
+    async function simpanManualSatuSub(subKode){
+      const kode = document.getElementById('pohonSasaran').value;
+      const sel = document.querySelector(`select[data-unmapped-sub="${CSS.escape(String(subKode))}"]`);
+      const tk = sel ? sel.value : '';
+      if(!tk) return alert('Pilih Kinerja Taktis tujuan terlebih dahulu.');
+      try{ await saveManualPemetaan(kode, [{ kode_subkegiatan: String(subKode), kode_taktis: tk }]); }
+      catch(e){ alert('Gagal menyimpan pemetaan: ' + e.message); }
+    }
+    async function simpanManualSemuaUnmapped(){
+      const kode = document.getElementById('pohonSasaran').value;
+      const updates = [];
+      document.querySelectorAll('select[data-unmapped-sub]').forEach(sel => {
+        if(sel.value) updates.push({ kode_subkegiatan: sel.getAttribute('data-unmapped-sub'), kode_taktis: sel.value });
+      });
+      if(!updates.length) return alert('Pilih minimal satu Kinerja Taktis tujuan pada daftar di bawah.');
+      try{ await saveManualPemetaan(kode, updates); }
+      catch(e){ alert('Gagal menyimpan pemetaan: ' + e.message); }
     }
     // ----- Zoom, cetak/PDF Pohon Kinerja -----
     let pohonZoomPct = 90;
@@ -3693,10 +3992,12 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 
     function getPohonPrintData(){
       const w = state.workspace, kode = document.getElementById('pohonSasaran').value;
+      const filterCsf = document.getElementById('pohonFilterCsf') ? document.getElementById('pohonFilterCsf').value : '';
+      const layoutMode = document.getElementById('pohonLayout') ? document.getElementById('pohonLayout').value : 'auto';
       const sas = w.sasaran.find(s => s.level === 'Sasaran' && String(s.kode) === String(kode));
       const rows = (w.pohonKinerja || []).filter(r => String(r.kode_sasaran_induk) === String(kode));
       const inds = w.sasaran.filter(r => r.level === 'Indikator' && String(r.kode_sasaran_induk) === String(kode));
-      const b = sas ? buildPohonTreeHtml(sas, inds, rows, w) : { html:'' };
+      const b = sas ? buildPohonTreeHtml(sas, inds, rows, w, { filterCsf, layoutMode, forPrint: true }) : { html:'' };
       if(!b.html){ alert('Belum ada Pohon Kinerja. Klik Generate Pohon Kinerja terlebih dahulu.'); return null; }
       const ctx = pohonKonteksRpjmd(sas ? sas.kode_sasaran_induk : '');
       const badgeHtml = `<div style="margin:2px auto 10px;padding:5px 16px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:999px;font-size:11px;color:#1E3A8A;display:inline-block;box-shadow:0 1px 4px rgba(30,58,138,0.06)"><b>Keterkaitan RPJMD:</b> Mendukung Sasaran RPJMD ${ctx.kodeSasaran ? '[' + escapeHtml(ctx.kodeSasaran) + '] ' : ''}${escapeHtml(ctx.sasaran || '-')}</div>`;
