@@ -843,6 +843,16 @@
   .b-misi{background:linear-gradient(135deg,var(--amber),var(--amber-dark))}
   .b-tujuan{background:linear-gradient(135deg,#3D342C,#24211E)}
   .b-rpjmd-link{background:var(--amber-soft);color:#5A3E14;border:1px solid #ECDAB5;font-weight:600;font-size:11.5px;padding:3px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;margin-top:6px}
+  .rpjmd-prog-box{margin-top:10px;padding:10px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px}
+  .rpjmd-prog-box summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--navy-deep);display:flex;align-items:center;gap:7px;flex-wrap:wrap;list-style:none}
+  .rpjmd-prog-box summary::-webkit-details-marker{display:none}
+  .rpjmd-prog-row{margin-top:8px;padding-top:8px;border-top:1px dashed #CBD5E1;font-size:12px;line-height:1.45}
+  .rpjmd-prog-name{display:inline-block;background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE;border-radius:6px;padding:2px 8px;font-weight:700;font-size:11px;margin:3px 0}
+  .rpjmd-opd-chip{display:inline-flex;align-items:center;gap:4px;background:#F1F5F9;color:#334155;border:1px solid #CBD5E1;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600;margin:2px 4px 2px 0}
+  .rpjmd-opd-chip.mine{background:#DCFCE7;color:#166534;border-color:#86EFAC}
+  .rpjmd-prog-hint{margin-bottom:12px;background:#F8FAFC;border:1px solid #CBD5E1;border-radius:10px;padding:9px 11px;font-size:11.5px}
+  .rpjmd-prog-hint-item{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:6px 0;border-top:1px dashed #E2E8F0}
+  .rpjmd-prog-hint-item:first-of-type{border-top:none;padding-top:2px}
   @media (max-width:920px){.t-sasaran-rpjmd{margin-left:12px}}
 
   /* ===== Visualisasi Bagan Pohon Kinerja (PermenPANRB 89/2021) ===== */
@@ -1263,7 +1273,10 @@
         </div>
         <div class="card">
           <div class="panel-head">
-            <h2>Pohon Kinerja RPJMD: Tujuan & Sasaran (2025–2030)</h2>
+            <h2>Pohon Kinerja RPJMD: Tujuan, Sasaran, Outcome &amp; Program Prioritas (2025–2030)</h2>
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--navy-deep);cursor:pointer;background:#F1F5FB;border:1px solid #CBD5E1;padding:6px 11px;border-radius:9px">
+              <input type="checkbox" id="rpjmdOnlyMine" onchange="renderRpjmd()"> Tampilkan khusus pengampu OPD ini
+            </label>
           </div>
           <div id="rpjmdFilterTabs" class="vtab-row"></div>
           <div id="rpjmdTreeList"></div>
@@ -1466,7 +1479,8 @@
   <div class="modal-acts"><button class="btn btn-line" onclick="closeModal('modalIndikator')">Batal</button><button id="btnSaveIndikator" class="btn btn-primary" onclick="saveIndikator()">Simpan</button></div></div></div>
 
 <div id="modalProgram" class="overlay"><div class="modal"><h3 id="modalProgramTitle">Tambah Program</h3><div id="modalProgramAlert"></div>
-  <div class="fg"><label>Sasaran Renstra yang diintervensi *</label><select id="programSasaranInduk"></select></div>
+  <div class="fg"><label>Sasaran Renstra yang diintervensi *</label><select id="programSasaranInduk" onchange="renderProgramRpjmdHint()"></select></div>
+  <div id="programRpjmdHint"></div>
   <div class="fg"><label>Nama Program *</label><input type="text" id="programNama" maxlength="300"></div>
   <div class="fg"><label>Outcome Program <small>(dari kolom OUTCOME BAB IV Renstra)</small></label><input type="text" id="programOutcome" maxlength="500" placeholder="contoh: Meningkatnya kelancaran pelayanan pemerintahan dan pembangunan"></div>
   <div class="fg"><label>Indikator Outcome Program <small>(dari kolom INDIKATOR BAB IV Renstra)</small></label><input type="text" id="programIndikatorOutcome" maxlength="300" placeholder="contoh: Persentase Pemenuhan Pelaksanaan Administrasi Perkantoran"></div>
@@ -1562,6 +1576,126 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     const TEMPLATE_SHEET_ID = '1_WIYT6FWa0fzy2iZnBqifxtRECKOjPB8MPpc9dbqqC0';
     const PAGE_TITLES = { dashboard:'Dashboard', rpjmd:'RPJMD Kabupaten Indragiri Hulu (2025–2029)', sasaran:'Sasaran Renstra & Indikator', program:'Program', kegiatan:'Kegiatan', subkegiatan:'Subkegiatan', pokin:'Cascading Kinerja OPD', pohon:'Pohon Kinerja (berbasis outcome)', pkopd:'Perjanjian Kinerja (PK) Kepala OPD & IKU', rencana:'Rencana Aksi', pengukuran:'Pengukuran Kinerja', setting:'Pengaturan' };
     const MASTER_RPJMD = {"visi": "TERWUJUDNYA KABUPATEN INDRAGIRI HULU SEBAGAI PUSAT PELAYANAN, INDUSTRI BARANG DAN JASA DALAM LINGKUNGAN MASYARAKAT YANG RELIGIUS, BERBUDAYA, SERTA SEJAHTERA PADA TAHUN 2029", "misi": [{"kode": 1, "uraian": "Meningkatkan dan mengembangkan kuantitas, kualitas dan pemerataan pembangunan infrastruktur berkeadilan untuk mewujudkan peningkatan pelayanan masyarakat guna mencapai kesejahteraan rakyat"}, {"kode": 2, "uraian": "Meningkatkan dan mengembangkan kualitas sumber daya manusia yang sehat dan menguasai serta menerapkan ilmu pengetahuan dan teknologi guna mewujudkan Kabupaten Indragiri Hulu sebagai salah satu pusat kebudayaan di Provinsi Riau"}, {"kode": 3, "uraian": "Memberdayakan masyarakat untuk mengelola potensi sumber daya ekonomi secara optimal sebagai landasan yang kokoh dalam pembangunan struktur perekonomian daerah dan masyarakat yang kuat berbasis kerakyatan yang bertumpu pada sistem agribisnis"}, {"kode": 4, "uraian": "Menata dan mengembangkan manajemen pemerintah daerah yang responsif, akuntabilitas, transformatif dan partisipatif sebagai perwujudan reformasi birokrasi"}, {"kode": 5, "uraian": "Mengoptimalkan pengelolaan dan pemanfaatan sumber daya alam yang berwawasan ramah lingkungan"}, {"kode": 6, "uraian": "Mengembangkan pembangunan pedesaan sebagai basis pembangunan daerah"}, {"kode": 7, "uraian": "Membangun kehidupan beragama, keharmonisan sosial dan menjaga kerukunan antar umat beragama dan etnis di antara semua warga"}], "items": [{"kode": "1.1", "level": "Tujuan", "misi_ke": 1, "uraian": "Meningkatkan Pemerataan pembangunan Infrastruktur yang berkualitas", "indikator": "Persentase Kualitas Layanan Infrastruktur", "satuan": "%", "b2024": "26,27", "t2025": "28,70", "t2026": "32,02", "t2027": "34,38", "t2028": "36,80", "t2029": "39,31", "t2030": "42,38"}, {"kode": "1.1.1", "level": "Sasaran", "misi_ke": 1, "uraian": "Meningkatnya kualitas Infrastruktur Jalan", "indikator": "Persentase Panjang Jaringan Jalan Dalam Kondisi Baik", "satuan": "%", "b2024": "17,59", "t2025": "21,35", "t2026": "22,48", "t2027": "23,61", "t2028": "24,73", "t2029": "26,85", "t2030": "27,98"}, {"kode": "1.1.2", "level": "Sasaran", "misi_ke": 1, "uraian": "Meningkatnya kualitas infrastruktur lingkungan perumahan dan permukiman", "indikator": "Rumah tangga dengan akses sanitasi aman", "satuan": "%", "b2024": "9,52", "t2025": "10,26", "t2026": "12,09", "t2027": "13,12", "t2028": "14,24", "t2029": "15,45", "t2030": "16,77"}, {"kode": "1.1.2", "level": "Sasaran", "misi_ke": 1, "uraian": "Meningkatnya kualitas infrastruktur lingkungan perumahan dan permukiman", "indikator": "Akses Rumah Tangga Perkotaan terhadap Air Siap Minum Perpipaan", "satuan": "%", "b2024": "13,57", "t2025": "20,55", "t2026": "27,27", "t2027": "33,99", "t2028": "40,71", "t2029": "49,42", "t2030": "56,14"}, {"kode": "1.1.3", "level": "Sasaran", "misi_ke": 1, "uraian": "Meningkatnya Infrastruktur pengelolaan sumber daya air", "indikator": "Persentase Jaringan Irigasi Dalam Kondisi Baik", "satuan": "%", "b2024": "20,80", "t2025": "21,35", "t2026": "23,40", "t2027": "24,50", "t2028": "25,65", "t2029": "26,85", "t2030": "28,11"}, {"kode": "1.1.4", "level": "Sasaran", "misi_ke": 1, "uraian": "Meningkatnya pelayanan transportasi", "indikator": "Rasio konektifitas", "satuan": "Rasio", "b2024": "0,548", "t2025": "0,623", "t2026": "0,656", "t2027": "0,656", "t2028": "0,656", "t2029": "0,711", "t2030": "0,711"}, {"kode": "2.1", "level": "Tujuan", "misi_ke": 2, "uraian": "Meningkatkan kualitas SDM yang Sehat, Cerdas dan berdaya saing", "indikator": "Indeks Pembangunan Manusia (IPM)", "satuan": "Indeks", "b2024": "72,75", "t2025": "72,83-72,99", "t2026": "73,16-73,40", "t2027": "73,51-73,70", "t2028": "73,87-74,04", "t2029": "74,30-74,52", "t2030": "75,04-75,32"}, {"kode": "2.1.1", "level": "Sasaran", "misi_ke": 2, "uraian": "Meningkatnya tingkat kesehatan Masyarakat", "indikator": "Umur Harapan Hidup", "satuan": "Tahun", "b2024": "70,89", "t2025": "73,79", "t2026": "74,00", "t2027": "74,20", "t2028": "74,41", "t2029": "74,64", "t2030": "74,87"}, {"kode": "2.1.2", "level": "Sasaran", "misi_ke": 2, "uraian": "Meningkatnya kualitas pendidikan masyarakat", "indikator": "Harapan Lama Sekolah (HLS)", "satuan": "Tahun", "b2024": "12,6", "t2025": "12,67", "t2026": "12,75", "t2027": "12,84", "t2028": "12,92", "t2029": "13,00", "t2030": "13,09"}, {"kode": "2.1.2", "level": "Sasaran", "misi_ke": 2, "uraian": "Meningkatnya kualitas pendidikan masyarakat", "indikator": "Rata-Rata Lama Sekolah (RLS)", "satuan": "Tahun", "b2024": "8,43", "t2025": "8,46", "t2026": "8,48", "t2027": "8,50", "t2028": "8,52", "t2029": "8,63", "t2030": "8,77"}, {"kode": "2.1.3", "level": "Sasaran", "misi_ke": 2, "uraian": "Meningkatnya literasi digital masyarakat", "indikator": "Indeks Masyarakat Digital Indonesia (Digi)", "satuan": "Indeks", "b2024": "42,62", "t2025": "43,45", "t2026": "43,88", "t2027": "44,33", "t2028": "44,86", "t2029": "45,22", "t2030": "45,58"}, {"kode": "2.1.3", "level": "Sasaran", "misi_ke": 2, "uraian": "Meningkatnya literasi digital masyarakat", "indikator": "Indeks Pemerintah Digital (Pemdi)", "satuan": "Indeks", "b2024": "-", "t2025": "1,3", "t2026": "1,4", "t2027": "1,5", "t2028": "1,6", "t2029": "1,7", "t2030": "2,0"}, {"kode": "2.1.4", "level": "Sasaran", "misi_ke": 2, "uraian": "Meningkatnya kesetaraan gender dan kualitas keluarga", "indikator": "Indeks Ketimpangan Gender (IKG)", "satuan": "Indeks", "b2024": "0,57", "t2025": "0,56", "t2026": "0,54", "t2027": "0,52", "t2028": "0,51", "t2029": "0,50", "t2030": "0,49"}, {"kode": "2.1.4", "level": "Sasaran", "misi_ke": 2, "uraian": "Meningkatnya kesetaraan gender dan kualitas keluarga", "indikator": "Indeks Pembangunan Keluarga", "satuan": "Indeks", "b2024": "66,3", "t2025": "67,5", "t2026": "68,6", "t2027": "69,7", "t2028": "70,7", "t2029": "71,7", "t2030": "72,6"}, {"kode": "2.2", "level": "Tujuan", "misi_ke": 2, "uraian": "Meningkatkan pengembangan kemajuan kebudayaan daerah", "indikator": "Persentase benda, bangunan, struktur, situs, dan kawasan cagar budaya yang telah ditetapkan terhadap total pendaftaran", "satuan": "%", "b2024": "10", "t2025": "13", "t2026": "15", "t2027": "18", "t2028": "20", "t2029": "21", "t2030": "24"}, {"kode": "2.2", "level": "Tujuan", "misi_ke": 2, "uraian": "Meningkatkan pengembangan kemajuan kebudayaan daerah", "indikator": "Persentase warisan budaya tak benda yang telah ditetapkan terhadap total pencatatan", "satuan": "%", "b2024": "4", "t2025": "4", "t2026": "5", "t2027": "6", "t2028": "7", "t2029": "8", "t2030": "9"}, {"kode": "2.2.1", "level": "Sasaran", "misi_ke": 2, "uraian": "Meningkatnya warisan budaya daerah", "indikator": "Persentase Cagar Budaya yang Ditetapkan terhadap Objek Diduga Cagar Budaya (ODCB) yang terverifikasi dan tervalidasi", "satuan": "%", "b2024": "8", "t2025": "10", "t2026": "11", "t2027": "12", "t2028": "13", "t2029": "14", "t2030": "15"}, {"kode": "2.2.2", "level": "Sasaran", "misi_ke": 2, "uraian": "Meningkatnya warisan budaya ekspresi", "indikator": "Jumlah warisan budaya tak benda yang dicatat dan didaftarkan (WBTB)", "satuan": "WBTB", "b2024": "100", "t2025": "150", "t2026": "200", "t2027": "250", "t2028": "300", "t2029": "350", "t2030": "400"}, {"kode": "3.1", "level": "Tujuan", "misi_ke": 3, "uraian": "Mewujudkan pembangunan ekonomi yang mandiri, kokoh dan berdaya saing", "indikator": "Pertumbuhan Ekonomi", "satuan": "%", "b2024": "3,74", "t2025": "4,08-4,47", "t2026": "4,1-4,5", "t2027": "4,11-4,55", "t2028": "4,13-4,59", "t2029": "4,15-4,64", "t2030": "4,17-4,69"}, {"kode": "3.1", "level": "Tujuan", "misi_ke": 3, "uraian": "Mewujudkan pembangunan ekonomi yang mandiri, kokoh dan berdaya saing", "indikator": "Kontribusi PDRB Kabupaten", "satuan": "%", "b2024": "5,45", "t2025": "5,59-5,55", "t2026": "5,68-5,64", "t2027": "5,77-5,74", "t2028": "5,87-5,83", "t2029": "5,96-5,92", "t2030": "6,03-5,99"}, {"kode": "3.1.1", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya kemandirian ekonomi daerah", "indikator": "Ekspor Barang dan Jasa", "satuan": "% PDRB", "b2024": "22,65", "t2025": "24,75", "t2026": "26,85", "t2027": "28,95", "t2028": "31,05", "t2029": "33,15", "t2030": "35,25"}, {"kode": "3.1.1", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya kemandirian ekonomi daerah", "indikator": "PDRB per kapita", "satuan": "Rp Juta", "b2024": "129,13", "t2025": "131,86-132,85", "t2026": "145,77-149,30", "t2027": "159,68-165,76", "t2028": "173,59-182,21", "t2029": "187,49-198,66", "t2030": "206,84-222,72"}, {"kode": "3.1.1", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya kemandirian ekonomi daerah", "indikator": "Kontribusi PDRB Industri Pengolahan", "satuan": "%", "b2024": "27,51", "t2025": "27,05-28,5", "t2026": "27,43-28,53", "t2027": "27,82-28,55", "t2028": "28,20-28,57", "t2029": "28,59-28,61", "t2030": "28,80-29,03"}, {"kode": "3.1.2", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya realisasi investasi daerah", "indikator": "Pembentukan Modal Tetap Bruto", "satuan": "% PDRB", "b2024": "35,53", "t2025": "36,39-36,31", "t2026": "36,17-36,09", "t2027": "35,94-35,87", "t2028": "35,72-35,64", "t2029": "35,49-35,42", "t2030": "35,19-35,13"}, {"kode": "3.1.3", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya Peran Koperasi, UMKM dalam ekonomi daerah", "indikator": "Rasio Kewirausahaan Daerah", "satuan": "%", "b2024": "8,93", "t2025": "9,13", "t2026": "9,33", "t2027": "9,53", "t2028": "9,73", "t2029": "9,93", "t2030": "10,13"}, {"kode": "3.1.3", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya Peran Koperasi, UMKM dalam ekonomi daerah", "indikator": "Rasio Volume Usaha Koperasi terhadap PDRB", "satuan": "%", "b2024": "0,51", "t2025": "0,56", "t2026": "0,61", "t2027": "0,65", "t2028": "0,69", "t2029": "0,72", "t2030": "0,75"}, {"kode": "3.1.4", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya Daya Saing Daerah", "indikator": "Indeks Daya Saing Daerah", "satuan": "Indeks", "b2024": "3,47", "t2025": "3,51", "t2026": "3,56", "t2027": "3,60", "t2028": "3,65", "t2029": "3,69", "t2030": "3,74"}, {"kode": "3.1.5", "level": "Sasaran", "misi_ke": 3, "uraian": "Mengurangi kemiskinan dan ketimpangan", "indikator": "Tingkat Kemiskinan", "satuan": "%", "b2024": "6,02", "t2025": "6,00-5,62", "t2026": "5,65-5,11", "t2027": "5,30-4,60", "t2028": "4,95-4,09", "t2029": "4,60-3,59", "t2030": "4,32-3,31"}, {"kode": "3.1.5", "level": "Sasaran", "misi_ke": 3, "uraian": "Mengurangi kemiskinan dan ketimpangan", "indikator": "Rasio Gini", "satuan": "Indeks", "b2024": "0,295", "t2025": "0,291-0,292", "t2026": "0,287-0,289", "t2027": "0,283-0,287", "t2028": "0,279-0,284", "t2029": "0,275-0,281", "t2030": "0,271-0,279"}, {"kode": "3.1.6", "level": "Sasaran", "misi_ke": 3, "uraian": "Mengurangi angka pengangguran", "indikator": "Tingkat Pengangguran Terbuka", "satuan": "%", "b2024": "2,55", "t2025": "2,46-2,33", "t2026": "2,44-2,55", "t2027": "2,42-2,17", "t2028": "2,41-2,09", "t2029": "2,40-2,01", "t2030": "2,31-1,93"}, {"kode": "3.2", "level": "Tujuan", "misi_ke": 3, "uraian": "Mewujudkan Pembangunan Pertanian yang mandiri dan berdaya saing", "indikator": "Indeks Ketahanan Pangan", "satuan": "Indeks", "b2024": "60,71", "t2025": "62,06", "t2026": "63,41", "t2027": "64,76", "t2028": "66,11", "t2029": "67,46", "t2030": "68,81"}, {"kode": "3.2.1", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya akses pangan masyarakat", "indikator": "Prevalensi Ketidakcukupan Konsumsi Pangan", "satuan": "%", "b2024": "11,22", "t2025": "10,84", "t2026": "10,33", "t2027": "9,82", "t2028": "8,51", "t2029": "8,81", "t2030": "8,30"}, {"kode": "3.2.2", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya Ketersediaan Pangan", "indikator": "Persentase dari Cadangan Pangan Pemerintah (CPP) yang ditetapkan", "satuan": "%", "b2024": "7,64", "t2025": "47,64", "t2026": "62,64", "t2027": "100", "t2028": "100", "t2029": "100", "t2030": "100"}, {"kode": "3.2.3", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya Pemanfaatan Pangan", "indikator": "Angka Kebutuhan Energi (AKE)", "satuan": "Angka", "b2024": "1960,4", "t2025": "1983,7", "t2026": "2006,9", "t2027": "2030,2", "t2028": "2053,5", "t2029": "2076,7", "t2030": "2100,0"}, {"kode": "3.3", "level": "Tujuan", "misi_ke": 3, "uraian": "Meningkatkan Perkembangan Ekonomi Kreatif dan Pariwisata", "indikator": "Rasio PDRB Penyediaan Akomodasi Makan dan Minum", "satuan": "% PDRB", "b2024": "0,010", "t2025": "0,71-0,81", "t2026": "0,73-0,83", "t2027": "0,75-0,85", "t2028": "0,77-0,87", "t2029": "0,78-0,88", "t2030": "0,79-0,89"}, {"kode": "3.3.1", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya kontribusi ekonomi kreatif", "indikator": "Proporsi PDRB Ekonomi Kreatif", "satuan": "%", "b2024": "-", "t2025": "0,54-0,56", "t2026": "0,54-0,56", "t2027": "0,54-0,56", "t2028": "0,54-0,56", "t2029": "0,55-0,54", "t2030": "0,54-0,56"}, {"kode": "3.3.2", "level": "Sasaran", "misi_ke": 3, "uraian": "Meningkatnya pertumbuhan pariwisata", "indikator": "Jumlah Tamu Wisatawan", "satuan": "Orang", "b2024": "545074", "t2025": "490566", "t2026": "441509", "t2027": "485660", "t2028": "534226", "t2029": "587648", "t2030": "646413"}, {"kode": "4.1", "level": "Tujuan", "misi_ke": 4, "uraian": "Meningkatkan tata kelola pemerintahan yang baik", "indikator": "Indeks Reformasi Birokrasi", "satuan": "Indeks", "b2024": "73,33", "t2025": "69,33", "t2026": "70,49", "t2027": "71,65", "t2028": "72,82", "t2029": "74,00", "t2030": "75,19"}, {"kode": "4.1.1", "level": "Sasaran", "misi_ke": 4, "uraian": "Meningkatnya akuntabilitas penyelenggaraan pemerintahan daerah", "indikator": "Nilai akuntabilitas kinerja pemerintah (AKIP)", "satuan": "Nilai", "b2024": "66,87", "t2025": "73,25", "t2026": "74,45", "t2027": "75,66", "t2028": "76,90", "t2029": "78,16", "t2030": "79,43"}, {"kode": "4.1.1", "level": "Sasaran", "misi_ke": 4, "uraian": "Meningkatnya akuntabilitas penyelenggaraan pemerintahan daerah", "indikator": "Indeks Akses Keuangan Daerah (IKAD)", "satuan": "Indeks", "b2024": "-", "t2025": "4,27", "t2026": "4,40", "t2027": "4,54", "t2028": "4,67", "t2029": "4,81", "t2030": "4,94"}, {"kode": "4.1.2", "level": "Sasaran", "misi_ke": 4, "uraian": "Meningkatnya kualitas Pelayanan Publik", "indikator": "Indeks Pelayanan Publik", "satuan": "Poin", "b2024": "4,00", "t2025": "4,03", "t2026": "4,06", "t2027": "4,09", "t2028": "4,12", "t2029": "4,15", "t2030": "4,18"}, {"kode": "4.1.2", "level": "Sasaran", "misi_ke": 4, "uraian": "Meningkatnya kualitas Pelayanan Publik", "indikator": "Indeks Kepuasan Masyarakat", "satuan": "Poin", "b2024": "83,41", "t2025": "86,68", "t2026": "86,78", "t2027": "87,04", "t2028": "87,14", "t2029": "87,38", "t2030": "87,67"}, {"kode": "5.1", "level": "Tujuan", "misi_ke": 5, "uraian": "Meningkatkan kualitas lingkungan hidup", "indikator": "Indeks kualitas lingkungan hidup", "satuan": "Indeks", "b2024": "69,83", "t2025": "76,76", "t2026": "76,98", "t2027": "77,19", "t2028": "77,40", "t2029": "77,61", "t2030": "78,05"}, {"kode": "5.1.1", "level": "Sasaran", "misi_ke": 5, "uraian": "Meningkatnya kualitas air, udara dan tutupan lahan", "indikator": "Indeks kualitas air", "satuan": "Indeks", "b2024": "57,86", "t2025": "75,35", "t2026": "75,55", "t2027": "75,75", "t2028": "75,95", "t2029": "76,15", "t2030": "76,35"}, {"kode": "5.1.1", "level": "Sasaran", "misi_ke": 5, "uraian": "Meningkatnya kualitas air, udara dan tutupan lahan", "indikator": "Indeks kualitas udara", "satuan": "Indeks", "b2024": "91,35", "t2025": "78,93", "t2026": "79,23", "t2027": "79,53", "t2028": "79,83", "t2029": "80,13", "t2030": "80,43"}, {"kode": "5.1.1", "level": "Sasaran", "misi_ke": 5, "uraian": "Meningkatnya kualitas air, udara dan tutupan lahan", "indikator": "Indeks kualitas tutupan lahan", "satuan": "Indeks", "b2024": "50,60", "t2025": "75,19", "t2026": "75,26", "t2027": "75,33", "t2028": "75,40", "t2029": "75,47", "t2030": "75,54"}, {"kode": "5.1.2", "level": "Sasaran", "misi_ke": 5, "uraian": "Menurunnya intensitas Emisi Gas Rumah Kaca (GRK)", "indikator": "Penurunan Intensitas Emisi GRK", "satuan": "%", "b2024": "-", "t2025": "54,05", "t2026": "56,39", "t2027": "58,49", "t2028": "60,67", "t2029": "62,88", "t2030": "65,03"}, {"kode": "5.1.3", "level": "Sasaran", "misi_ke": 5, "uraian": "Mengurangi resiko bencana daerah", "indikator": "Indeks Risiko Bencana (IRB)", "satuan": "Indeks", "b2024": "124,65", "t2025": "121,00", "t2026": "118,97", "t2027": "117,97", "t2028": "116,98", "t2029": "116,00", "t2030": "115,03"}, {"kode": "5.1.3", "level": "Sasaran", "misi_ke": 5, "uraian": "Mengurangi resiko bencana daerah", "indikator": "Indeks Ketahanan Daerah (IKD)", "satuan": "Indeks", "b2024": "0,33", "t2025": "0,39", "t2026": "0,40", "t2027": "0,41", "t2028": "0,41", "t2029": "0,42", "t2030": "0,43"}, {"kode": "6.1", "level": "Tujuan", "misi_ke": 6, "uraian": "Meningkatkan Kemandirian desa", "indikator": "Indeks Desa", "satuan": "Indeks", "b2024": "-", "t2025": "0,41", "t2026": "0,47", "t2027": "0,75", "t2028": "0,79", "t2029": "0,94", "t2030": "1,00"}, {"kode": "6.1.1", "level": "Sasaran", "misi_ke": 6, "uraian": "Meningkatnya Ketahanan Lingkungan, Sosial, dan Ekonomi Desa", "indikator": "Indeks Ketahanan Lingkungan Desa", "satuan": "Indeks", "b2024": "-", "t2025": "0,12", "t2026": "0,14", "t2027": "0,25", "t2028": "0,26", "t2029": "0,31", "t2030": "0,32"}, {"kode": "6.1.1", "level": "Sasaran", "misi_ke": 6, "uraian": "Meningkatnya Ketahanan Lingkungan, Sosial, dan Ekonomi Desa", "indikator": "Indeks Ketahanan Sosial Desa", "satuan": "Indeks", "b2024": "-", "t2025": "0,14", "t2026": "0,16", "t2027": "0,25", "t2028": "0,26", "t2029": "0,32", "t2030": "0,34"}, {"kode": "6.1.1", "level": "Sasaran", "misi_ke": 6, "uraian": "Meningkatnya Ketahanan Lingkungan, Sosial, dan Ekonomi Desa", "indikator": "Indeks Ketahanan Ekonomi Desa", "satuan": "Indeks", "b2024": "-", "t2025": "0,15", "t2026": "0,17", "t2027": "0,25", "t2028": "0,27", "t2029": "0,31", "t2030": "0,34"}, {"kode": "6.1.2", "level": "Sasaran", "misi_ke": 6, "uraian": "Meningkatnya Penyelenggaraan Pemerintahan Desa", "indikator": "Nilai Kinerja Tata Kelola Pemerintahan Desa dan kualitas pembangunan", "satuan": "Nilai", "b2024": "0,78", "t2025": "0,80", "t2026": "0,82", "t2027": "0,84", "t2028": "0,86", "t2029": "0,88", "t2030": "0,90"}, {"kode": "7.1", "level": "Tujuan", "misi_ke": 7, "uraian": "Meningkatkan kerukunan, keharmonisan antar umat beragama dan etnis di antara semua warga", "indikator": "Persentase konflik bernuansa SARA", "satuan": "%", "b2024": "0", "t2025": "0", "t2026": "0", "t2027": "0", "t2028": "0", "t2029": "0", "t2030": "0"}, {"kode": "7.1.1", "level": "Sasaran", "misi_ke": 7, "uraian": "Meningkatnya Kerukunan Antar Umat Beragama", "indikator": "Jumlah konflik antar umat beragama", "satuan": "Kasus", "b2024": "0", "t2025": "0", "t2026": "0", "t2027": "0", "t2028": "0", "t2029": "0", "t2030": "0"}, {"kode": "7.1.2", "level": "Sasaran", "misi_ke": 7, "uraian": "Meningkatnya Keharmonisan Antar Etnis", "indikator": "Jumlah konflik antar etnis", "satuan": "Kasus", "b2024": "0", "t2025": "0", "t2026": "0", "t2027": "0", "t2028": "0", "t2029": "0", "t2030": "0"}]};
+
+    const MASTER_RPJMD_PROGRAM = [
+      {"s":"1.1.1","k":"1.1.1.1","o":"Meningkatnya aksesbilitas masyarakat yang nyaman dan aman","i":"Persentase Tingkat Kemantapan Jalan","p":"PROGRAM PENYELENGGARAAN JALAN","opd":["Dinas Pekerjaan Umum, Penataan Ruang, Perumahan dan Kawasan Permukiman"]},
+      {"s":"1.1.2","k":"1.1.2.1","o":"Meningkatnya akses masyarakat terhadap sistem pengelolaan air limbah","i":"Persentase Peningkatan Rumah Tangga yang menempati Hunian dengan Akses Sanitasi (Air Limbah Domestik Layak dan Aman)","p":"PROGRAM PENGELOLAAN DAN PENGEMBANGAN SISTEM AIR LIMBAH","opd":["Dinas Pekerjaan Umum, Penataan Ruang, Perumahan dan Kawasan Permukiman"]},
+      {"s":"1.1.2","k":"1.1.2.2","o":"Meningkatnya akses masyarakat terhadap sistem penyediaan air minum","i":"Persentase jumlah rumah tangga yang mendapatkan akses terhadap air minum melalui SPAM jaringan perpipaan dan bukan jaringan perpipaan terlindungi terhadap rumah tangga di seluruh kabupaten/kota","p":"PROGRAM PENGELOLAAN DAN PENGEMBANGAN SISTEM PENYEDIAAN AIR MINUM","opd":["Dinas Pekerjaan Umum, Penataan Ruang, Perumahan dan Kawasan Permukiman"]},
+      {"s":"1.1.2","k":"1.1.2.3","o":"Terpenuhinya rumah layak huni bagi warga negara korban bencana dan yang terkena relokasi akibat program pemerintah","i":"1. Persentase Warga Negara Korban Bencana yang Memperoleh Rumah Layak Huni; 2. Persentase Warga Negara yang Terkena Relokasi Akibat Program Kabupaten yang Memperoleh Fasilitasi Penyediaan Rumah yang Layak Huni","p":"PROGRAM PENGEMBANGAN PERUMAHAN","opd":["Dinas Pekerjaan Umum, Penataan Ruang, Perumahan dan Kawasan Permukiman"]},
+      {"s":"1.1.2","k":"1.1.2.4","o":"Meningkatnya penyediaan PSU permukiman","i":"Persentase Permukiman yang Sudah Dilengkapi PSU (Prasarana, Sarana, dan Utilitas Umum)","p":"PROGRAM PENINGKATAN PRASARANA, SARANA DAN UTILITAS UMUM (PSU)","opd":["Dinas Pekerjaan Umum, Penataan Ruang, Perumahan dan Kawasan Permukiman"]},
+      {"s":"1.1.3","k":"1.1.3.1","o":"Meningkatnya perlindungan masyarakat terhadap banjir dan meningkatnya akses masyarakat terhadap irigasi","i":"1. Persentase peningkatan Perlindungan Kawasan dari Abrasi dan Banjir Rob; 2. Persentase Luas Layanan","p":"PROGRAM PENGELOLAAN SUMBER DAYA AIR (SDA)","opd":["Dinas Pekerjaan Umum, Penataan Ruang, Perumahan dan Kawasan Permukiman"]},
+      {"s":"1.1.4","k":"1.1.4.1","o":"Meningkatnya kualitas layanan transportasi darat","i":"1. Konektivitas Darat; 2. Persentase Kelengkapan Jalan yang telah Terpasang terhadap Kondisi Ideal","p":"PROGRAM PENYELENGGARAAN LALU LINTAS DAN ANGKUTAN (LLAJ)","opd":["Dinas Perhubungan"]},
+      {"s":"1.1.4","k":"1.1.4.2","o":"Meningkatnya kualitas layanan transportasi sungai dan laut","i":"Konektivitas Sungai dan Danau","p":"PROGRAM PENGELOLAAN PELAYARAN","opd":["Dinas Perhubungan"]},
+      {"s":"2.1.1","k":"2.1.1.1","o":"Meningkatnya kualitas kesehatan perorangan dan masyarakat","i":"1. Angka Kematian Ibu (AKI) per 100.000 Kelahiran Hidup; 2. Prevalensi Stunting (Pendek dan Sangat Pendek) Pada Balita","p":"PROGRAM PEMENUHAN UPAYA KESEHATAN PERORANGAN DAN UPAYA KESEHATAN MASYARAKAT","opd":["Dinas Kesehatan","RSUD Indrasari Rengat"]},
+      {"s":"2.1.1","k":"2.1.1.2","o":"Meningkatnya mutu dan distribusi tenaga kesehatan","i":"Persentase Peningkatan Kompetensi SDM Bidang Kesehatan","p":"PROGRAM PENINGKATAN KAPASITAS SUMBER DAYA MANUSIA KESEHATAN","opd":["Dinas Kesehatan","RSUD Indrasari Rengat"]},
+      {"s":"2.1.1","k":"2.1.1.3","o":"Meningkatnya kualitas pemberdayaan masyarakat bidang kesehatan","i":"Persentase Masyarakat Bidang Kesehatan yang Diberdayakan","p":"PROGRAM PEMBERDAYAAN MASYARAKAT BIDANG KESEHATAN","opd":["Dinas Kesehatan"]},
+      {"s":"2.1.2","k":"2.1.2.1","o":"Meningkatnya partisipasi anak usia sekolah","i":"Persentase Anak Usia 7-15 Tahun yang Berpartisipasi dalam Pendidikan Dasar","p":"PROGRAM PENGELOLAAN PENDIDIKAN","opd":["Dinas Pendidikan dan Kebudayaan"]},
+      {"s":"2.1.2","k":"2.1.2.2","o":"Meningkatnya mutu dan distribusi pendidik dan tenaga pendidikan","i":"Persentase Guru yang Memiliki Sertifikat Pendidik","p":"PROGRAM PENDIDIK DAN TENAGA KEPENDIDIKAN","opd":["Dinas Pendidikan dan Kebudayaan"]},
+      {"s":"2.1.3","k":"2.1.3.1","o":"Meningkatnya kualitas pengelolaan aplikasi informatika","i":"Indeks SPBE","p":"PROGRAM APLIKASI INFORMATIKA","opd":["Dinas Komunikasi, Informatika dan Statistik"]},
+      {"s":"2.1.3","k":"2.1.3.3","o":"Meningkatnya Layanan Perpustakaan Sesuai Standar Nasional Perpustakaan","i":"Nilai Tingkat Kegemaran Membaca Masyarakat","p":"PROGRAM PEMBINAAN PERPUSTAKAAN","opd":["Dinas Perpustakaan dan Kearsipan"]},
+      {"s":"2.1.4","k":"2.1.4.1","o":"Meningkatnya kualitas dan efektivitas penyelenggaraan PUG dan peran perempuan dalam pembangunan","i":"1. Persentase Anggaran Responsif Gender (ARG); 2. Tingkat Partisipasi Angkatan Kerja (TPAK) Perempuan","p":"PROGRAM PENGARUSUTAMAAN GENDER DAN PEMBERDAYAAN PEREMPUAN","opd":["Dinas Pengendalian Penduduk, Keluarga Berencana, Pemberdayaan Perempuan dan Perlindungan Anak"]},
+      {"s":"2.1.4","k":"2.1.4.2","o":"Meningkatnya pemberdayaan dan peran serta masyarakat dalam pembinaan Keluarga Berencana (KB)","i":"1. Angka Prevalensi Kontrasepsi Modern/Modern Contraceptive (mCPR); 2. Persentase Kebutuhan Ber- KB yang tidak Terpenuhi (Unmet Need)","p":"PROGRAM PEMBINAAN KELUARGA BERENCANA (KB)","opd":["Dinas Pengendalian Penduduk, Keluarga Berencana, Pemberdayaan Perempuan dan Perlindungan Anak"]},
+      {"s":"2.1.4","k":"2.1.4.3","o":"Meningkatnya kualitas keluarga dalam mendukung kesetaraan gender, pemenuhan hak, serta perlindungan perempuan dan anak","i":"Pembelajaran Keluarga (Puspaga) yang Berperspektif Gender dan Hak Anak Sesuai Standar","p":"PROGRAM PENINGKATAN KUALITAS KELUARGA","opd":["Dinas Pengendalian Penduduk, Keluarga Berencana, Pemberdayaan Perempuan dan Perlindungan Anak"]},
+      {"s":"2.1.4","k":"2.1.4.4","o":"Meningkatnya pemberdayaan dan peran serta masyarakat dalam mewujudkan keluarga sejahtera (KS)","i":"Persentase Keluarga yang mengikuti kelompok kegiatan ketahanan keluarga","p":"PROGRAM PEMBERDAYAAN DAN PENINGKATAN KELUARGA SEJAHTERA (KS)","opd":["Dinas Pengendalian Penduduk, Keluarga Berencana, Pemberdayaan Perempuan dan Perlindungan Anak"]},
+      {"s":"2.2.1","k":"2.2.1.1","o":"Meningkatnya warisan budaya yang dilestarikan","i":"1. Persentase Warisan Budaya yang Dilestarikan; 2. Persentase Cagar Budaya dan Warisan Budaya Tak Benda yang Ditetapkan","p":"PROGRAM PELESTARIAN DAN PENGELOLAAN CAGAR BUDAYA","opd":["Dinas Pendidikan dan Kebudayaan"]},
+      {"s":"2.2.2","k":"2.2.2.1","o":"Meningkatnya peran serta masyarakat dalam pengembangan kebudayaan","i":"Tingkat Partisipasi Masyarakat Terhadap Pengembangan Kebudayaan","p":"PROGRAM PENGEMBANGAN KEBUDAYAAN","opd":["Dinas Pendidikan dan Kebudayaan"]},
+      {"s":"3.1.1","k":"3.1.1.1","o":"Meningkatnya kualitas sarana perdagangan dan distribusi barang yang efisien, merata dan terintegrasi","i":"Persentase Sarana Perdagangan yang Ditingkatkan Kualitasnya","p":"PROGRAM PENINGKATAN SARANA DISTRIBUSI PERDAGANGAN","opd":["Dinas Perindustrian, Perdagangan, Koperasi, Usaha Kecil dan Menengah"]},
+      {"s":"3.1.1","k":"3.1.1.2","o":"Meningkatnya realisasi pembangunan industri","i":"Persentase Realisasi Investasi Sektor Industri dan Kawasan Industri","p":"PROGRAM PERENCANAAN DAN PEMBANGUNAN INDUSTRI","opd":["Dinas Perindustrian, Perdagangan, Koperasi, Usaha Kecil dan Menengah"]},
+      {"s":"3.1.2","k":"3.1.2.1","o":"Meningkatnya Kemudahan berinvestasi","i":"Realisasi Total Terhadap Target Investasi","p":"PROGRAM PENGEMBANGAN IKLIM PENANAMAN MODAL","opd":["Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu"]},
+      {"s":"3.1.2","k":"3.1.2.2","o":"Meningkatnya perizinan berusaha berbasis risiko","i":"Persentase Pelaku Usaha yang Memperoleh Izin Sesuai Ketentuan","p":"PROGRAM PELAYANAN PENANAMAN MODAL","opd":["Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu"]},
+      {"s":"3.1.2","k":"3.1.2.3","o":"Meningkatnya jangkauan promosi penanaman modal","i":"Persentase Peningkatan Investor yang Berinvestasi","p":"PROGRAM PROMOSI PENANAMAN MODAL","opd":["Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu"]},
+      {"s":"3.1.3","k":"3.1.3.1","o":"Meningkatnya produktivitas koperasi","i":"Persentase Meningkatnya Koperasi yang Berkualitas","p":"PROGRAM PEMBERDAYAAN DAN PERLIDUNGAN KOPERASI","opd":["Dinas Perindustrian, Perdagangan, Koperasi, Usaha Kecil dan Menengah"]},
+      {"s":"3.1.3","k":"3.1.3.2","o":"Meningkatnya kapasitas UMKM yang tangguh dan mandiri","i":"1. Persentase Usaha Kecil yang Bertransformasi dari Informal ke Formal; 2. Pertumbuhan Wirausaha","p":"PROGRAM PEMBERDAYAAN USAHA MENENGAH, USAHA KECIL, DAN USAHA MIKRO (UMKM)","opd":["Dinas Perindustrian, Perdagangan, Koperasi, Usaha Kecil dan Menengah"]},
+      {"s":"3.1.3","k":"3.1.3.3","o":"Meningkatnya daya saing UMKM","i":"Proporsi UKM Menjalin Kemitraan dan Ekspor","p":"PROGRAM PENGEMBANGAN UMKM","opd":["Dinas Perindustrian, Perdagangan, Koperasi, Usaha Kecil dan Menengah"]},
+      {"s":"3.1.4","k":"3.1.4.1","o":"Meningkatnya kualitas kebijakan pengelolaan perekonomian dan pembangunan","i":"Efektivitas Pelaksanaan Kebijakan Pengelolaan Perekonomian dan Pembangunan; Persentase Terpenuhinya Program Pendapatan Keuangan Daerah","p":"PROGRAM PEREKONOMIAN DAN PEMBANGUNAN","opd":["Sekretariat Daerah"]},
+      {"s":"3.1.4","k":"3.1.4.2","o":"Meningkatnya upaya ekstensifikasi dan intensifikasi pendapatan","i":"Persentase PAD terhadap Pendapatan Daerah","p":"PROGRAM PENGELOLAAN PENDAPATAN DAERAH","opd":["Badan Pendapatan Daerah"]},
+      {"s":"3.1.4","k":"3.1.4.3","o":"Meningkatnya kualitas pengawasan dan pelaporan","i":"Cakupan pembinaan dan pengawasan pengelolaan pendapatan","p":"PROGRAM PENGELOLAAN PENDAPATAN DAERAH","opd":["Badan Pendapatan Daerah"]},
+      {"s":"3.1.4","k":"3.1.4.4","o":"Meningkatnya penerapan sistem informasi keuangan berbasis digital","i":"Persentase Penerapan Sistem Informasi Keuangan Berbasis Digital","p":"PROGRAM PENGELOLAAN PENDAPATAN DAERAH","opd":["Badan Pendapatan Daerah"]},
+      {"s":"3.1.5","k":"3.1.5.1","o":"Meningkatnya pemberdayaan sosial","i":"1. Persentase Pekerja Sosial/ Tenaga Kesejahteraan Sosial yang Melaksanakan Pelayanan Sosial di Dalam Panti Rehabilitasi Sosial.; 2. Persentase Pekerja Sosial/Tenaga Kesejahteraan Sosial yang Melaksanakan Pelayanan Sosial di Dalam Panti Rehabilitasi Sosial bagi Pemerlu Pelayanan Kesejahteraan Sosial (PPKS) Lainnya di luar HIV/ AIDS dan NAPZA; 3. Persentase Pekerja Sosial /Tenaga Kesejahteraan Sosial dan/ atau Relawan Sosial yang Melaksanakan Penanganan Korban Bencana Kabupaten pada Masa Tanggap Darurat dan Pasca Bencana Sesuai Standar.; 4. Persentase SDM Kesejahteraan Sosial yang Meningkat Kompetensinya dalam Pelayanan Sosial.; 5. Persentase Lembaga di Bidang Kesejahteraan Sosial yang Meningkat Kualitasnya dalam Pelayanan Sosial.","p":"PROGRAM PEMBERDAYAAN SOSIAL","opd":["Dinas Sosial"]},
+      {"s":"3.1.5","k":"3.1.5.2","o":"Meningkatnya perlindungan dan jaminan sosial","i":"1. Persentase Penerima Manfaat yang Terpenuhi Kebutuhan Dasar; 2. Persentase Penerima Manfaat yang Meningkat Kemandirian Ekonomi; 3. Persentase Daerah yang Melaksanakan Pengelolaan dan Pendataan Data Fakir Miskin; 4. Peningkatan Indeks Kebutuhan Dasar; 5. Peningkatan Indeks Keberdayaan Ekonomi; 6. Persentase Keluarga Miskin dan Rentan Penerima Perlindungan Sosial yang Tergraduasi dari Kemiskinan","p":"PROGRAM PERLINDUNGAN DAN JAMINAN SOSIAL","opd":["Dinas Sosial"]},
+      {"s":"3.1.6","k":"3.1.6.1","o":"Meningkatnya produktivitas tenaga kerja","i":"Persentase Tenaga Kerja di Sektor Prioritas yang Meningkat Produktivitasnya","p":"PROGRAM PELATIHAN KERJA DAN PRODUKTIVITAS TENAGA KERJA","opd":["Dinas Tenaga Kerja"]},
+      {"s":"3.1.6","k":"3.1.6.2","o":"Meningkatnya penempatan tenaga kerja","i":"Persentase Tenaga Kerja yang Ditempatkan di Dalam Negeri","p":"PROGRAM PENEMPATAN TENAGA KERJA","opd":["Dinas Tenaga Kerja"]},
+      {"s":"3.2.1","k":"3.2.1.1","o":"Meningkatnya penanganan kerawanan pangan","i":"Persentase Daerah Rentan Rawan Pangan","p":"PROGRAM PENANGANAN KERAWANAN PANGAN","opd":["Dinas Ketahanan Pangan, Tanaman Pangan dan Hortikultura"]},
+      {"s":"3.2.2","k":"3.2.2.1","o":"Meningkatnya pengelolaan sumber daya ekonomi untuk kedaulatan dan kemandirian pangan","i":"Persentase Jumlah Cadangan Pangan","p":"PROGRAM PENGELOLAAN SUMBER DAYA EKONOMI UNTUK KEDAULATAN DAN KEMANDIRIAN PANGAN","opd":["Dinas Ketahanan Pangan, Tanaman Pangan dan Hortikultura"]},
+      {"s":"3.2.2","k":"3.2.2.2","o":"Meningkatnya diversifikasi dan ketahanan pangan masyarakat","i":"Skor Pola Pangan Harapan","p":"PROGRAM PENINGKATAN DIVERSIFIKASI DAN KETAHANAN PANGAN MASYARAKAT","opd":["Dinas Ketahanan Pangan, Tanaman Pangan dan Hortikultura"]},
+      {"s":"3.2.2","k":"3.2.2.3","o":"Meningkatnya distribusi dan kualitas sarana pertanian","i":"1. Peningkatan Produksi Tanaman Pangan; 2. Peningkatan Produksi Hortikultura; 3. Peningkatan Produksi Komoditas Peternakan","p":"PROGRAM PENYEDIAAN DAN PENGEMBANGAN SARANA PERTANIAN","opd":["Dinas Ketahanan Pangan, Tanaman Pangan dan Hortikultura","Dinas Perkebunan, Peternakan dan Perikanan"]},
+      {"s":"3.2.2","k":"3.2.2.4","o":"Meningkatnya distribusi dan kualitas prasarana pertanian","i":"Cakupan Luas Lahan Pertanian yang Ditetapkan Menjadi LP2B","p":"PROGRAM PENYEDIAAN DAN PENGEMBANGAN PRASARANA PERTANIAN","opd":["Dinas Ketahanan Pangan, Tanaman Pangan dan Hortikultura","Dinas Perkebunan, Peternakan dan Perikanan"]},
+      {"s":"3.2.3","k":"3.2.3.1","o":"Meningkatnya produksi perikanan tangkap","i":"Jumlah Produksi Perikanan Tangkap","p":"PROGRAM PENGELOLAAN PERIKANAN TANGKAP","opd":["Dinas Perkebunan, Peternakan dan Perikanan"]},
+      {"s":"3.2.3","k":"3.2.3.2","o":"Meningkatnya produksi perikanan budidaya","i":"Jumlah Produksi Perikanan Budidaya","p":"PROGRAM PENGELOLAAN PERIKANAN BUDIDAYA","opd":["Dinas Perkebunan, Peternakan dan Perikanan"]},
+      {"s":"3.3.1","k":"3.3.1.1","o":"Meningkatnya kualitas ekosistem kreatif","i":"Persentase Pelaku Ekonomi Kreatif yang Memiliki Kekayaan Intelektual","p":"PROGRAM PENGEMBANGAN EKONOMI KREATIF MELALUI PEMANFAATAN DAN PERLINDUNGAN HAK KEKAYAAN INTELEKTUAL","opd":["Dinas Kepemudaan, Olahraga dan Pariwisata"]},
+      {"s":"3.3.1","k":"3.3.1.1","o":"Meningkatnya kapasitas SDM pariwisata dan ekonomi kreatif","i":"Persentase Pelaku Pariwisata dan Ekonomi Kreatif yang Aktif dan Tervalidasi","p":"PROGRAM PENGEMBANGAN SUMBER DAYA PARIWISATA DAN EKONOMI KREATIF","opd":["Dinas Kepemudaan, Olahraga dan Pariwisata"]},
+      {"s":"3.3.2","k":"3.3.2.1","o":"Meningkatnya daya tarik destinasi pariwisata","i":"Persentase Pertumbuhan Kunjungan Wisatawan","p":"PROGRAM PENINGKATAN DAYA TARIK DESTINASI PARIWISATA","opd":["Dinas Kepemudaan, Olahraga dan Pariwisata"]},
+      {"s":"3.3.2","k":"3.3.2.2","o":"Meningkatnya jangkauan pemasaran pariwisata","i":"Persentase Peningkatan Media Pemasaran Pariwisata","p":"PROGRAM PEMASARAN PARIWISATA","opd":["Dinas Kepemudaan, Olahraga dan Pariwisata"]},
+      {"s":"4.1.1","k":"4.1.1.1","o":"Meningkatnya kualitas pendampingan dan asistensi","i":"1. Maturitas Penyelenggaraan Sistem Pengendalian Intern Pemerintah (SPIP); 2. Kapabilitas Aparat Pengawasan Intern Pemerintah (APIP)","p":"PROGRAM PERUMUSAN KEBIJAKAN, PENDAMPINGAN DAN ASISTENSI","opd":["Inspektorat"]},
+      {"s":"4.1.1","k":"4.1.1.2","o":"Menurunnya terjadinya penyelewengan atau penyimpangan, baik yang bersifat anggaran ataupun proses dan kewenangan","i":"Tindaklanjut Rekomendasi BPK Tahun Anggaran N-1","p":"PROGRAM PENYELENGGARAAN PENGAWASAN","opd":["Inspektorat"]},
+      {"s":"4.1.1","k":"4.1.1.3","o":"Meningkatnya tata kelola anggaran","i":"1. Persentase Belanja Pegawai di Luar Tunjangan Guru yang Dialokasikan melalui TKD; 2. Persentase Alokasi Belanja Infrastruktur Pelayanan Publik","p":"PROGRAM PENGELOLAAN KEUANGAN DAERAH","opd":["Badan Pengelola Keuangan dan Aset Daerah"]},
+      {"s":"4.1.1","k":"4.1.1.4","o":"Meningkatnya tata kelola perbendaharaan","i":"1. Persentase Realisasi Anggaran Belanja Urusan Wajib Pelayanan Dasar; 2. Persentase Penurunan SILPA","p":"PROGRAM PENGELOLAAN KEUANGAN DAERAH","opd":["Badan Pengelola Keuangan dan Aset Daerah"]},
+      {"s":"4.1.1","k":"4.1.1.5","o":"Meningkatnya tata kelola akuntansi dan pelaporan","i":"Persentase laporan keuangan tepat waktu","p":"PROGRAM PENGELOLAAN KEUANGAN DAERAH","opd":["Badan Pengelola Keuangan dan Aset Daerah","Badan Pendapatan Daerah"]},
+      {"s":"4.1.2","k":"4.1.2.1","o":"Meningkatnya kualitas layanan pendaftaran penduduk","i":"1. Persentase Kepemilikan Identitas Kependudukan Digital; 2. Persentase Kepemilikan Kartu Identitas Anak","p":"PROGRAM PENDAFTARAN PENDUDUK","opd":["Dinas Kependudukan dan Pencatatan Sipil"]},
+      {"s":"4.1.2","k":"4.1.2.2","o":"Meningkatnya kualitas layanan pencatatan sipil","i":"1. Persentase Akta Kematian yang Diterbitkan bagi yang Melaporkan; 2. Persentase Akta Kelahiran yang Diterbitkan bagi yang Melaporkan; 3. Persentase Akta Perkawinan yang Diterbitkan bagi yang Melaporkan; 4. Persentase Akta Perceraian yang Diterbitkan bagi yang Melaporkan","p":"PROGRAM PENCATATAN SIPIL","opd":["Dinas Kependudukan dan Pencatatan Sipil"]},
+      {"s":"5.1.1","k":"5.1.1.1","o":"Menurunnya pencemaran dan/atau kerusakan lingkungan hidup","i":"1. Indeks Kualitas Air; 2. Indeks Kualitas Udara","p":"PROGRAM PENGENDALIAN PENCEMARAN DAN/ATAU KERUSAKAN LINGKUNGAN HIDUP","opd":["Dinas Lingkungan Hidup, Kebersihan dan Pertamanan"]},
+      {"s":"5.1.1","k":"5.1.1.2","o":"Meningkatnya kualitas pengelolaan keanekaragaman hayati","i":"Persentase RTH","p":"PROGRAM PENGELOLAAN KEANEKARAGAMAN HAYATI (KEHATI)","opd":["Dinas Lingkungan Hidup, Kebersihan dan Pertamanan"]},
+      {"s":"5.1.2","k":"5.1.2.1","o":"Meningkatnya tata kelola persampahan","i":"Indeks Kinerja Pengelolaan Sampah","p":"PROGRAM PENGELOLAAN PERSAMPAHAN","opd":["Dinas Lingkungan Hidup, Kebersihan dan Pertamanan"]},
+      {"s":"5.1.3","k":"5.1.3.1","o":"Meningkatnya kualitas layanan pencegahan dan kesiapsiagaan terhadap bencana","i":"Persentase Cakupan Penyebaran Informasi dan Edukasi Rawan Bencana","p":"PROGRAM PENANGGULANGAN BENCANA","opd":["Badan Penanggulangan Bencana Daerah, Pemadaman Kebakaran dan Penyelamatan"]},
+      {"s":"5.1.3","k":"5.1.3.2","o":"Meningkatnya penanganan bencana pada saat tanggap darurat","i":"Persentase Penanganan Tanggap Darurat Bencana","p":"PROGRAM PENANGGULANGAN BENCANA","opd":["Badan Penanggulangan Bencana Daerah, Pemadaman Kebakaran dan Penyelamatan"]},
+      {"s":"5.1.3","k":"5.1.3.3","o":"Meningkatnya penanganan bencana pada saat pasca bencana","i":"Persentase Penanganan Pasca Bencana","p":"PROGRAM PENANGGULANGAN BENCANA","opd":["Badan Penanggulangan Bencana Daerah, Pemadaman Kebakaran dan Penyelamatan"]},
+      {"s":"5.1.3","k":"5.1.3.4","o":"Meningkatnya perlindungan sosial korban bencana","i":"1. Persentase Korban Bencana Alam, Sosial dan/atau Non Alam yang Terpenuhi Kebutuhan Dasar Pada Saat dan Setelah Tanggap Darurat Bencana; 2. Persentase Masyarakat di Daerah Rawan Bencana yang Meningkat Kesiapsiagaannya; 3. Persentase Korban Bencana yang Mendapatkan Layanan Pemulihan Sosial","p":"PROGRAM PENANGANAN BENCANA","opd":["Dinas Sosial"]},
+      {"s":"6.1.1","k":"6.1.1.1","o":"Meningkatnya kualitas penataan desa","i":"Persentase Fasilitasi Penataan Desa","p":"PROGRAM PENATAAN DESA","opd":["Dinas Pemberdayaan Masyarakat dan Desa"]},
+      {"s":"6.1.1","k":"6.1.1.2","o":"Meningkatnya kapasitas Lembaga Kemasyarakatan, Lembaga Adat dan Masyarakat Hukum Adat dalam pembangunan","i":"1.Persentase Fasilitasi Pemberdayaan Lembaga Kemasyarakatan Desa (LKD); 2.Persentase Fasilitasi Pemberdayaan Lembaga Adat Desa dan Lembaga Masyarakat Hukum Adat","p":"PROGRAM PEMBERDAYAAN LEMBAGA KEMASYARAKATAN, LEMBAGA ADAT DAN MASYARAKAT HUKUM ADAT","opd":["Dinas Pemberdayaan Masyarakat dan Desa"]},
+      {"s":"6.1.2","k":"6.1.2.1","o":"Meningkatnya kualitas pembinaan dan pengawasan pemerintahan desa","i":"1. Persentase Aparatur Desa dan Anggota BPD yang Ditingkatkan Kapasitasnya; 2. Persentase Fasilitasi Tata Kelola Desa","p":"PROGRAM ADMINISTRASI PEMERINTAHAN DESA","opd":["Dinas Pemberdayaan Masyarakat dan Desa"]},
+      {"s":"7.1.1","k":"7.1.1.1","o":"Meningkatnya ketahanan ekonomi, sosial, dan budaya masyarakat","i":"Persentase Kebijakan di Bidang Ketahanan Ekonomi, Sosial, Budaya dan Fasilitasi Pencegahan Penyalagunaan Narkotika, Fasilitasi Kerukunan Umat Beragama dan Penghayat Kepercayaan di Daerah yang Dilaksanakan","p":"PROGRAM PEMBINAAN DAN PENGEMBANGAN KETAHANAN EKONOMI, SOSIAL, DAN BUDAYA","opd":["Badan Kesatuan Bangsa dan Politik"]},
+      {"s":"7.1.2","k":"7.1.2.1","o":"Meningkatnya penanganan konflik sosial yang diselesaikan","i":"Persentase Konflik Sosial yang Diselesaikan","p":"PROGRAM PENINGKATAN KEWASPADAAN NASIONAL DAN PENINGKATAN KUALITAS DAN FASILITASI PENANGANAN KONFLIK SOSIAL","opd":["Badan Kesatuan Bangsa dan Politik"]}
+    ];
+    function normOpdMatch(s){
+      return String(s||'').toLowerCase()
+        .replace(/kabupaten|indragiri hulu|inhu|\bkab\b/g,' ')
+        .replace(/[^a-z0-9]+/g,' ')
+        .trim();
+    }
+    function isSameOpdName(a, b){
+      const x = normOpdMatch(a), y = normOpdMatch(b);
+      if(!x || !y) return false;
+      if(x === y || x === y + ' daerah' || y === x + ' daerah') return true;
+      return Math.min(x.length, y.length) >= 10 && (x.indexOf(y) !== -1 || y.indexOf(x) !== -1);
+    }
+    function getRpjmdProgs(kodeSasaran){
+      const k = String(kodeSasaran||'').trim();
+      return k ? MASTER_RPJMD_PROGRAM.filter(x => x.s === k) : [];
+    }
+    function sasaranHasOpd(kodeSasaran, opdName){
+      if(!opdName) return false;
+      return getRpjmdProgs(kodeSasaran).some(p => (p.opd||[]).some(o => isSameOpdName(o, opdName)));
+    }
+    function getSasaranOpdList(kodeSasaran){
+      const out = [];
+      getRpjmdProgs(kodeSasaran).forEach(p => (p.opd||[]).forEach(o => { if(out.indexOf(o) === -1) out.push(o); }));
+      return out;
+    }
+    function renderRpjmdProgBoxHtml(kodeSasaran, curOpdName, autoOpen){
+      const progs = getRpjmdProgs(kodeSasaran);
+      if(!progs.length) return '';
+      const allOpds = getSasaranOpdList(kodeSasaran);
+      const isMultiOpd = allOpds.length > 1;
+      const isMine = curOpdName ? sasaranHasOpd(kodeSasaran, curOpdName) : false;
+      let html = `<details class="rpjmd-prog-box"${autoOpen ? ' open' : ''}>`
+        + `<summary><span><i class="fa-solid fa-diagram-project" style="color:var(--navy)"></i> Program Prioritas &amp; OPD Pengampu RPJMD (${progs.length} Program${isMultiOpd ? ' &middot; <span style="color:#9A6200">Lintas OPD (' + allOpds.length + ' OPD)</span>' : ''}${isMine ? ' &middot; <span style="color:#065F46">&#10003; OPD Anda Mengampu</span>' : ''})</span><span style="font-size:11px;color:var(--muted);font-weight:500">Tabel III.3 RPJMD</span></summary>`
+        + `<div style="margin-top:8px">`;
+      progs.forEach(pr => {
+        const mineRow = curOpdName && (pr.opd||[]).some(o => isSameOpdName(o, curOpdName));
+        const chips = (pr.opd||[]).map(o => {
+          const hit = curOpdName && isSameOpdName(o, curOpdName);
+          return `<span class="rpjmd-opd-chip${hit ? ' mine' : ''}">${hit ? '<i class="fa-solid fa-check"></i> ' : ''}${escapeHtml(o)}</span>`;
+        }).join('');
+        html += `<div class="rpjmd-prog-row"${mineRow ? ' style="border-left:3px solid #16A34A;background:#F6FEF9"' : ''}>`
+          + `<div class="rpjmd-prog-name"><span class="bdg b-program" style="margin-right:6px">${escapeHtml(pr.k)}</span>${escapeHtml(pr.p)}</div>`
+          + `<div style="font-size:12px;color:#334155;margin-top:3px"><b>Outcome:</b> ${escapeHtml(pr.o)}</div>`
+          + `<div style="font-size:11.5px;color:#475569;margin-top:2px"><b>Indikator Outcome:</b> ${escapeHtml(pr.i)}</div>`
+          + `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;align-items:center"><span style="font-size:11px;color:var(--muted);font-weight:700">OPD Pengampu:</span>${chips}</div>`
+          + `</div>`;
+      });
+      html += `</div></details>`;
+      return html;
+    }
 
     let state = {
       opdList: [], currentOpd: null,
@@ -2460,8 +2594,16 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         if(k && k !== '-') opdSasaranCount[k] = (opdSasaranCount[k] || 0) + 1;
       });
 
+      const curOpdName = (state.currentOpd && state.currentOpd.nama_opd) ? state.currentOpd.nama_opd : '';
+      const onlyMineEl = document.getElementById('rpjmdOnlyMine');
+      const onlyMine = !!(onlyMineEl && onlyMineEl.checked && curOpdName);
+
       let html = '';
       tujuanMap.forEach(tuj => {
+        const sMap = sasaranByTujuan.get(tuj.kode);
+        const sasList = sMap ? Array.from(sMap.values()).filter(sas => !onlyMine || sasaranHasOpd(sas.kode, curOpdName)) : [];
+        if(onlyMine && !sasList.length) return;
+
         html += `<div class="titem t-tujuan-rpjmd"><div class="row"><div class="body">`
           + `<span class="bdg b-misi">Misi ${tuj.misi_ke}</span><span class="bdg b-tujuan">Tujuan ${escapeHtml(tuj.kode)}</span>`
           + `<b>${escapeHtml(tuj.uraian)}</b>`;
@@ -2473,24 +2615,29 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         });
         html += `</div></div></div>`;
 
-        const sMap = sasaranByTujuan.get(tuj.kode);
-        if(sMap){
-          sMap.forEach(sas => {
-            const nIntervensi = opdSasaranCount[sas.kode] || 0;
-            html += `<div class="titem t-sasaran-rpjmd"><div class="row"><div class="body">`
-              + `<span class="bdg b-sasaran">Sasaran RPJMD ${escapeHtml(sas.kode)}</span>`
-              + `<b>${escapeHtml(sas.uraian)}</b>`
-              + (nIntervensi > 0 ? ` <span class="bdg" style="background:#0E7A54;margin-left:6px"><i class="fa-solid fa-link"></i> Diintervensi ${nIntervensi} Sasaran OPD</span>` : '');
-            sas.inds.forEach(ind => {
-              html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">`
-                + `<div style="font-size:12.5px"><i class="fa-solid fa-chart-simple" style="color:var(--navy-mid)"></i> <b>${escapeHtml(ind.indikator)}</b> <span style="color:var(--muted)">(${escapeHtml(ind.satuan)})</span></div>`
-                + renderRpjmdGrid(ind)
-                + `</div>`;
-            });
-            html += `</div></div></div>`;
+        sasList.forEach(sas => {
+          const nIntervensi = opdSasaranCount[sas.kode] || 0;
+          const isMine = curOpdName && sasaranHasOpd(sas.kode, curOpdName);
+          const opdOwners = getSasaranOpdList(sas.kode);
+          html += `<div class="titem t-sasaran-rpjmd"${isMine ? ' style="border-left-color:#16A34A"' : ''}><div class="row"><div class="body">`
+            + `<span class="bdg b-sasaran">Sasaran RPJMD ${escapeHtml(sas.kode)}</span>`
+            + `<b>${escapeHtml(sas.uraian)}</b>`
+            + (isMine ? ` <span class="bdg" style="background:#0B6E4F;margin-left:6px"><i class="fa-solid fa-building-user"></i> OPD Anda Pengampu</span>` : '')
+            + (opdOwners.length > 1 ? ` <span class="bdg" style="background:#B45309;margin-left:4px"><i class="fa-solid fa-people-arrows"></i> Lintas OPD (${opdOwners.length})</span>` : '')
+            + (nIntervensi > 0 ? ` <span class="bdg" style="background:#0E7A54;margin-left:6px"><i class="fa-solid fa-link"></i> Diintervensi ${nIntervensi} Sasaran OPD</span>` : '');
+          sas.inds.forEach(ind => {
+            html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">`
+              + `<div style="font-size:12.5px"><i class="fa-solid fa-chart-simple" style="color:var(--navy-mid)"></i> <b>${escapeHtml(ind.indikator)}</b> <span style="color:var(--muted)">(${escapeHtml(ind.satuan)})</span></div>`
+              + renderRpjmdGrid(ind)
+              + `</div>`;
           });
-        }
+          html += renderRpjmdProgBoxHtml(sas.kode, curOpdName, onlyMine || isMine);
+          html += `</div></div></div>`;
+        });
       });
+      if(!html && onlyMine){
+        html = `<div class="card"><div class="empty"><i class="fa-solid fa-circle-info"></i> Tidak ada Sasaran RPJMD di filter misi ini yang secara eksplisit tercantum di Tabel III.3 untuk <b>${escapeHtml(curOpdName)}</b>.<br><span style="font-size:12px">Catatan: OPD Sekretariat/Kecamatan/Penunjang tetap dapat mengintervensi Sasaran RPJMD yang relevan atau memakai Program Penunjang Urusan Pemerintahan Daerah.</span></div></div>`;
+      }
 
       document.getElementById('rpjmdTreeList').innerHTML = html || '<div class="empty"><p>Tidak ada data RPJMD untuk filter ini.</p></div>';
     }
@@ -2708,10 +2855,68 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       if(!confirm('Hapus Indikator "' + kode + '"?')) return;
       try{ const r = await callApi({ action:'deleteIndikatorSasaran', id_opd: state.currentOpd.id_opd, token: state.currentOpd.token, kode_indikator: kode }); if(!r.success) throw new Error(r.message); await loadWorkspace(); }catch(e){ alert('Error: ' + e.message); }
     }
+    let _rpjmdProgHintCache = [];
+    function renderProgramRpjmdHint(){
+      const box = document.getElementById('programRpjmdHint');
+      const sel = document.getElementById('programSasaranInduk');
+      if(!box || !sel){ return; }
+      const sasKode = String(sel.value || '').trim();
+      const sasObj = (state.workspace.sasaran || []).find(r => r.level === 'Sasaran' && String(r.kode) === sasKode);
+      const rpjmdKode = sasObj ? String(sasObj.kode_sasaran_induk || '').trim() : '';
+      if(!rpjmdKode || rpjmdKode === '-'){
+        _rpjmdProgHintCache = [];
+        box.innerHTML = '';
+        box.style.display = 'none';
+        return;
+      }
+      const curOpdName = (state.currentOpd && state.currentOpd.nama_opd) ? state.currentOpd.nama_opd : '';
+      const progs = getRpjmdProgs(rpjmdKode).slice().sort((a, b) => {
+        const am = curOpdName && (a.opd||[]).some(o => isSameOpdName(o, curOpdName)) ? 0 : 1;
+        const bm = curOpdName && (b.opd||[]).some(o => isSameOpdName(o, curOpdName)) ? 0 : 1;
+        return am - bm;
+      });
+      _rpjmdProgHintCache = progs;
+      if(!progs.length){
+        box.style.display = 'block';
+        box.innerHTML = `<div class="rpjmd-prog-hint"><i class="fa-solid fa-circle-info" style="color:var(--navy-mid)"></i> Sasaran RPJMD <b>${escapeHtml(rpjmdKode)}</b> belum memiliki daftar Program Prioritas spesifik di Tabel III.3, atau program ini bersifat penunjang/internal OPD.</div>`;
+        return;
+      }
+      let html = `<div class="rpjmd-prog-hint">`
+        + `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">`
+        + `<span><i class="fa-solid fa-lightbulb" style="color:#B45309"></i> <b>Referensi Program Prioritas RPJMD</b> untuk Sasaran <b>${escapeHtml(rpjmdKode)}</b> (${progs.length} Program):</span>`
+        + `<span id="rpjmdHintStatus" style="font-size:11px;color:var(--muted)">Klik "Pakai" untuk mengisi Nama Program, Outcome &amp; Indikator</span>`
+        + `</div>`;
+      progs.forEach((pr, idx) => {
+        const mine = curOpdName && (pr.opd||[]).some(o => isSameOpdName(o, curOpdName));
+        const opdChips = (pr.opd||[]).map(o => `<span class="rpjmd-opd-chip${(curOpdName && isSameOpdName(o, curOpdName)) ? ' mine' : ''}">${escapeHtml(o)}</span>`).join('');
+        html += `<div class="rpjmd-prog-hint-item"${mine ? ' style="border-color:#86EFAC;background:#F6FEF9"' : ''}>`
+          + `<div style="flex:1;min-width:0">`
+          + `<div style="font-weight:700;color:var(--navy)">${escapeHtml(pr.p)} ${mine ? '<span style="font-size:10.5px;color:#065F46;background:#DCFCE7;padding:1px 6px;border-radius:999px;margin-left:4px">&#10003; Pengampu OPD Anda</span>' : ''}</div>`
+          + `<div style="font-size:11.5px;color:#334155;margin-top:2px"><b>Outcome:</b> ${escapeHtml(pr.o)}</div>`
+          + `<div style="font-size:11px;color:#475569;margin-top:1px"><b>Indikator:</b> ${escapeHtml(pr.i)}</div>`
+          + `<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:4px">${opdChips}</div>`
+          + `</div>`
+          + `<button type="button" class="btn btn-sm ${mine ? 'btn-primary' : 'btn-outline'}" onclick="applyRpjmdProgHint(${idx})" style="flex-shrink:0"><i class="fa-solid fa-wand-magic-sparkles"></i> Pakai</button>`
+          + `</div>`;
+      });
+      html += `</div>`;
+      box.style.display = 'block';
+      box.innerHTML = html;
+    }
+    function applyRpjmdProgHint(idx){
+      const pr = _rpjmdProgHintCache[idx];
+      if(!pr) return;
+      document.getElementById('programNama').value = pr.p || '';
+      document.getElementById('programOutcome').value = pr.o || '';
+      document.getElementById('programIndikatorOutcome').value = pr.i || '';
+      const st = document.getElementById('rpjmdHintStatus');
+      if(st){ st.innerHTML = '<span style="color:#065F46;font-weight:700"><i class="fa-solid fa-check"></i> Referensi RPJMD diisikan ke form</span>'; }
+    }
     function openProgramForm(){
       if(!state.workspace.sasaran.some(r => r.level==='Sasaran')){ alert('Tambahkan Sasaran Renstra dulu.'); return; }
       populateSasaranSelect('programSasaranInduk','');
       ['programNama','programOutcome','programIndikatorOutcome','programSatuan','programBaseline','programT2025','programT2026','programT2027','programT2028','programT2029','programT2030','programPj'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+      renderProgramRpjmdHint();
       document.getElementById('modalProgramTitle').textContent='Tambah Program'; document.getElementById('modalProgramAlert').innerHTML='';
       const m=document.getElementById('modalProgram'); m.dataset.mode='create'; m.dataset.kode=''; openModal('modalProgram');
     }
@@ -2728,6 +2933,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         if(el) el.value = (p['target_'+y] === '' || p['target_'+y] == null) ? '' : p['target_'+y];
       });
       document.getElementById('programPj').value = p.penanggung_jawab || '';
+      renderProgramRpjmdHint();
       document.getElementById('modalProgramTitle').textContent='Edit Program: '+kode; document.getElementById('modalProgramAlert').innerHTML='';
       const m=document.getElementById('modalProgram'); m.dataset.mode='edit'; m.dataset.kode=kode; openModal('modalProgram');
     }
